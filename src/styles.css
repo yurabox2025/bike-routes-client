@@ -1,0 +1,15 @@
+body {
+  background-color: #f8f9fa;
+}
+
+.page-wrap {
+  max-width: 1120px;
+}
+
+.navbar-brand {
+  font-weight: 700;
+}
+
+.leaflet-container {
+  border-radius: 0.5rem;
+}
