@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../api';
 import type { Activity, RouteItem } from '../types';
@@ -9,22 +9,36 @@ export function HomePage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const loadData = useCallback(async () => {
+    try {
+      const [routesRes, activitiesRes] = await Promise.all([
+        apiFetch<{ routes: RouteItem[] }>('/api/routes'),
+        apiFetch<{ activities: Activity[] }>('/api/activities')
+      ]);
+      setRoutes(routesRes.routes);
+      setActivities(activitiesRes.activities);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load data');
+    }
+  }, []);
+
   useEffect(() => {
-    async function load() {
-      try {
-        const [routesRes, activitiesRes] = await Promise.all([
-          apiFetch<{ routes: RouteItem[] }>('/api/routes'),
-          apiFetch<{ activities: Activity[] }>('/api/activities')
-        ]);
-        setRoutes(routesRes.routes);
-        setActivities(activitiesRes.activities);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-      }
+    void loadData();
+  }, [loadData]);
+
+  const deleteRoute = async (routeId: string) => {
+    const confirmed = window.confirm('Удалить маршрут из списка? Все связанные поездки будут отвязаны от этого маршрута.');
+    if (!confirmed) {
+      return;
     }
 
-    void load();
-  }, []);
+    try {
+      await apiFetch<{ ok: boolean }>(`/api/routes/${routeId}`, { method: 'DELETE' });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete route');
+    }
+  };
 
   const recentActivities = useMemo(
     () => [...activities].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()).slice(0, 20),
@@ -53,10 +67,13 @@ export function HomePage() {
               <h2 className="h5">Список маршрутов</h2>
               {routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Создайте из любой activity.</p>}
               {routes.length > 0 && (
-                <ul className="mb-0">
+                <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {routes.map((route) => (
-                    <li key={route.id}>
+                    <li key={route.id} className="border rounded p-2 d-flex align-items-center justify-content-between gap-2">
                       <Link to={`/routes/${route.id}`}>{route.name}</Link>
+                      <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void deleteRoute(route.id)}>
+                        Удалить
+                      </button>
                     </li>
                   ))}
                 </ul>

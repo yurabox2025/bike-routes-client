@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
 import type { Activity, RouteItem, User } from '../types';
@@ -18,6 +18,7 @@ function normalizeParticipantIds(activity: Activity): string[] {
 
 export function ActivityPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -84,6 +85,43 @@ export function ActivityPage() {
       setSelectedParticipantIds(normalizeParticipantIds(response.activity));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save participants');
+    }
+  };
+
+  const unassignRoute = async () => {
+    if (!activity) {
+      return;
+    }
+
+    try {
+      const response = await apiFetch<{ activity: Activity }>(`/api/activities/${activity.id}/unassign-route`, {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      setActivity(response.activity);
+      setSelectedRoute('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to unassign route');
+    }
+  };
+
+  const deleteActivity = async () => {
+    if (!activity) {
+      return;
+    }
+
+    const confirmed = window.confirm('Удалить это прохождение маршрута и трек поездки?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await apiFetch<{ ok: boolean }>(`/api/activities/${activity.id}`, {
+        method: 'DELETE'
+      });
+      navigate('/');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete activity');
     }
   };
 
@@ -160,6 +198,11 @@ export function ActivityPage() {
               </button>
             </div>
           </form>
+          {activity.routeId && (
+            <button type="button" className="btn btn-outline-danger mt-3" onClick={unassignRoute}>
+              Удалить маршрут поездки
+            </button>
+          )}
         </div>
       </section>
 
@@ -209,6 +252,16 @@ export function ActivityPage() {
               </button>
             </div>
           </form>
+        </div>
+      </section>
+
+      <section className="card mt-3 border-danger">
+        <div className="card-body">
+          <h2 className="h5 text-danger">Опасная зона</h2>
+          <p className="mb-3">Удаление уберет прохождение маршрута и трек из списка.</p>
+          <button type="button" className="btn btn-danger" onClick={deleteActivity}>
+            Удалить пройденный маршрут
+          </button>
         </div>
       </section>
     </div>

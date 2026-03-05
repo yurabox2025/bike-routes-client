@@ -1,4 +1,5 @@
-import { MapContainer, Polyline, TileLayer } from 'react-leaflet';
+import { useEffect } from 'react';
+import { MapContainer, Polyline, TileLayer, useMap } from 'react-leaflet';
 import type { LineStringGeoJson } from '../types';
 import 'leaflet/dist/leaflet.css';
 
@@ -21,6 +22,16 @@ function toLatLngs(line?: LineStringGeoJson): [number, number][] {
   return line.coordinates.map(([lon, lat]) => [lat, lon]);
 }
 
+function AttributionPrefix() {
+  const map = useMap();
+
+  useEffect(() => {
+    map.attributionControl.setPrefix('🇷🇺 <a href="https://leafletjs.com">Leaflet</a>');
+  }, [map]);
+
+  return null;
+}
+
 export function MapView({ route, overlays = [], height = 420 }: Props) {
   const routeLatLngs = toLatLngs(route);
   const firstOverlayLatLngs = overlays.length > 0 ? toLatLngs(overlays[0].line) : [];
@@ -28,6 +39,7 @@ export function MapView({ route, overlays = [], height = 420 }: Props) {
 
   return (
     <MapContainer center={center} zoom={10} style={{ height: `${height}px`, width: '100%' }}>
+      <AttributionPrefix />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

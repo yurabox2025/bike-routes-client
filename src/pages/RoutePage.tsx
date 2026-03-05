@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
@@ -13,26 +13,26 @@ export function RoutePage() {
   const [showTracks, setShowTracks] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function load() {
-      if (!id) {
-        return;
-      }
-
-      try {
-        const routeRes = await apiFetch<{ route: RouteItem; completions: RouteCompletion[] }>(`/api/routes/${id}`);
-        setRoute(routeRes.route);
-        setCompletions(routeRes.completions);
-
-        const activitiesRes = await apiFetch<{ activities: Activity[] }>(`/api/activities?routeId=${id}`);
-        setActivities(activitiesRes.activities);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load route');
-      }
+  const loadData = useCallback(async () => {
+    if (!id) {
+      return;
     }
 
-    void load();
+    try {
+      const routeRes = await apiFetch<{ route: RouteItem; completions: RouteCompletion[] }>(`/api/routes/${id}`);
+      setRoute(routeRes.route);
+      setCompletions(routeRes.completions);
+
+      const activitiesRes = await apiFetch<{ activities: Activity[] }>(`/api/activities?routeId=${id}`);
+      setActivities(activitiesRes.activities);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load route');
+    }
   }, [id]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const overlays = useMemo(
     () =>
@@ -43,6 +43,38 @@ export function RoutePage() {
       })),
     [showTracks, activities]
   );
+
+  const removeUserFromCompletion = async (activityId: string, userId: string) => {
+    const confirmed = window.confirm('Убрать этого пользователя из прохождения маршрута?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await apiFetch<{ activity: Activity }>(`/api/activities/${activityId}/participants/${userId}`, {
+        method: 'DELETE'
+      });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove user from route');
+    }
+  };
+
+  const deleteCompletion = async (activityId: string) => {
+    const confirmed = window.confirm('Удалить это прохождение маршрута целиком?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await apiFetch<{ ok: boolean }>(`/api/activities/${activityId}`, {
+        method: 'DELETE'
+      });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete completed route');
+    }
+  };
 
   if (!route) {
     return (
@@ -81,11 +113,31 @@ export function RoutePage() {
           <h2 className="h5">Кто и когда проезжал</h2>
           {completions.length === 0 && <p className="text-muted mb-0">Пока нет прохождений.</p>}
           {completions.length > 0 && (
-            <ul className="mb-0">
+            <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
               {completions.map((completion) => (
-                <li key={`${completion.activityId}-${completion.userId}`}>
-                  <Link to={`/activities/${completion.activityId}`}>{completion.userName}</Link>
-                  <span> · {formatDate(completion.startedAt)}</span>
+                <li key={`${completion.activityId}-${completion.userId}`} className="border rounded p-2">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                    <div>
+                      <Link to={`/activities/${completion.activityId}`}>{completion.userName}</Link>
+                      <span> · {formatDate(completion.startedAt)}</span>
+                    </div>
+                    <div className="d-flex gap-2">
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-warning"
+                        onClick={() => void removeUserFromCompletion(completion.activityId, completion.userId)}
+                      >
+                        Удалить пользователя
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => void deleteCompletion(completion.activityId)}
+                      >
+                        Удалить прохождение
+                      </button>
+                    </div>
+                  </div>
                 </li>
               ))}
             </ul>
