@@ -13,3 +13,26 @@ body {
 .leaflet-container {
   border-radius: 0.5rem;
 }
+
+.with-fixed-header {
+  padding-top: 72px;
+}
+
+@media (max-width: 991.98px) {
+  .with-fixed-header {
+    padding-top: 120px;
+  }
+
+  .navbar .btn {
+    white-space: nowrap;
+  }
+
+  .mobile-nav-menu {
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    padding-top: 0.5rem;
+  }
+
+  .mobile-nav-menu .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}

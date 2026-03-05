@@ -53,7 +53,7 @@ export function HomePage() {
     <div className="container page-wrap py-4">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <h1 className="h3 m-0">Маршруты</h1>
-        <div className="d-flex gap-2">
+        <div className="d-grid d-sm-flex gap-2">
           <Link className="btn btn-outline-secondary" to="/routes/new">
             Создать маршрут
           </Link>
