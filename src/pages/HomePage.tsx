@@ -41,7 +41,11 @@ export function HomePage() {
   };
 
   const recentActivities = useMemo(
-    () => [...activities].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()).slice(0, 20),
+    () =>
+      [...activities]
+        .filter((activity) => activity.routeId !== null)
+        .sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+        .slice(0, 20),
     [activities]
   );
 
@@ -50,11 +54,14 @@ export function HomePage() {
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <h1 className="h3 m-0">Маршруты</h1>
         <div className="d-flex gap-2">
+          <Link className="btn btn-outline-secondary" to="/routes/new">
+            Создать маршрут
+          </Link>
           <Link className="btn btn-outline-primary" to="/map">
             Общая карта
           </Link>
           <Link className="btn btn-primary" to="/upload">
-            Загрузить GPX
+            Загрузить прохождение
           </Link>
         </div>
       </div>
@@ -65,7 +72,7 @@ export function HomePage() {
           <section className="card h-100">
             <div className="card-body">
               <h2 className="h5">Список маршрутов</h2>
-              {routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Создайте из любой activity.</p>}
+              {routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Сначала создайте маршрут.</p>}
               {routes.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {routes.map((route) => (

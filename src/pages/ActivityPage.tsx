@@ -24,7 +24,6 @@ export function ActivityPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedRoute, setSelectedRoute] = useState('');
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
-  const [createRouteName, setCreateRouteName] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -125,25 +124,6 @@ export function ActivityPage() {
     }
   };
 
-  const createRouteFromActivity = async (event: FormEvent) => {
-    event.preventDefault();
-    if (!activity || !createRouteName.trim()) {
-      return;
-    }
-
-    try {
-      const response = await apiFetch<{ route: RouteItem }>(`/api/routes/from-activity/${activity.id}`, {
-        method: 'POST',
-        body: JSON.stringify({ name: createRouteName.trim() })
-      });
-      setRoutes((prev) => [response.route, ...prev]);
-      setSelectedRoute(response.route.id);
-      setCreateRouteName('');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create route');
-    }
-  };
-
   if (!activity) {
     return (
       <div className="container page-wrap py-4">{error ? <div className="alert alert-danger">{error}</div> : <p>Loading...</p>}</div>
@@ -229,28 +209,6 @@ export function ActivityPage() {
             <button type="submit" className="btn btn-primary">
               Сохранить участников
             </button>
-          </form>
-        </div>
-      </section>
-
-      <section className="card">
-        <div className="card-body">
-          <h2 className="h5">Создать маршрут из этой поездки</h2>
-          <form className="row g-2 align-items-center" onSubmit={createRouteFromActivity}>
-            <div className="col-12 col-md-8">
-              <input
-                className="form-control"
-                value={createRouteName}
-                onChange={(e) => setCreateRouteName(e.target.value)}
-                placeholder="Название маршрута"
-                required
-              />
-            </div>
-            <div className="col-12 col-md-4">
-              <button type="submit" className="btn btn-primary w-100">
-                Создать
-              </button>
-            </div>
           </form>
         </div>
       </section>

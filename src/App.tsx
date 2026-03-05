@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ActivityPage } from './pages/ActivityPage';
 import { AllRoutesMapPage } from './pages/AllRoutesMapPage';
+import { CreateRoutePage } from './pages/CreateRoutePage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -21,8 +22,11 @@ function AppShell() {
               Bike Routes
             </Link>
             <div className="navbar-nav me-auto">
+              <Link to="/routes/new" className="nav-link">
+                Create Route
+              </Link>
               <Link to="/upload" className="nav-link">
-                Upload
+                Upload Completion
               </Link>
               <Link to="/map" className="nav-link">
                 All Map
@@ -46,6 +50,14 @@ function AppShell() {
           element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/routes/new"
+          element={
+            <ProtectedRoute>
+              <CreateRoutePage />
             </ProtectedRoute>
           }
         />

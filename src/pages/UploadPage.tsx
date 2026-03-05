@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
 import type { Activity, LineStringGeoJson, RouteItem, User } from '../types';
@@ -58,17 +58,19 @@ export function UploadPage() {
       setError('Нужно выбрать GPX файл');
       return;
     }
+    if (!routeId) {
+      setError('Сначала выберите маршрут. Маршрут создается отдельно на странице создания маршрута.');
+      return;
+    }
 
     setSaving(true);
     setError(null);
 
     const formData = new FormData();
     formData.append('gpx', file);
+    formData.append('routeId', routeId);
     if (trimMeters > 0) {
       formData.append('trimMeters', String(trimMeters));
-    }
-    if (routeId) {
-      formData.append('routeId', routeId);
     }
     if (selectedParticipantIds.length > 0) {
       formData.append('participantUserIds', JSON.stringify(selectedParticipantIds));
@@ -90,27 +92,32 @@ export function UploadPage() {
 
   return (
     <div className="container page-wrap py-4">
-      <h1 className="h3 mb-3">Загрузка GPX</h1>
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <h1 className="h3 m-0">Загрузка прохождения маршрута</h1>
+        <Link className="btn btn-outline-primary" to="/routes/new">
+          Сначала создать маршрут
+        </Link>
+      </div>
       <form className="card mb-3" onSubmit={handleSubmit}>
         <div className="card-body">
           <div className="mb-3">
-            <label className="form-label">GPX файл</label>
-            <input className="form-control" type="file" accept=".gpx" onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)} />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Privacy cut (метров в начале/конце)</label>
-            <input className="form-control" type="number" min={0} value={trimMeters} onChange={(e) => setTrimMeters(Number(e.target.value))} />
-          </div>
-          <div className="mb-3">
-            <label className="form-label">Привязать к маршруту</label>
+            <label className="form-label">Маршрут (обязательно)</label>
             <select className="form-select" value={routeId} onChange={(e) => setRouteId(e.target.value)}>
-              <option value="">Без маршрута</option>
+              <option value="">Выберите маршрут</option>
               {routes.map((route) => (
                 <option key={route.id} value={route.id}>
                   {route.name}
                 </option>
               ))}
             </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">GPX файл прохождения</label>
+            <input className="form-control" type="file" accept=".gpx" onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)} />
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Privacy cut (метров в начале/конце)</label>
+            <input className="form-control" type="number" min={0} value={trimMeters} onChange={(e) => setTrimMeters(Number(e.target.value))} />
           </div>
           <div className="mb-3">
             <label className="form-label">Отметить пользователей, которые проехали</label>
@@ -131,7 +138,7 @@ export function UploadPage() {
           </div>
           {error && <div className="alert alert-danger py-2">{error}</div>}
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? 'Сохраняем...' : 'Сохранить'}
+            {saving ? 'Сохраняем...' : 'Сохранить прохождение'}
           </button>
         </div>
       </form>
@@ -139,7 +146,7 @@ export function UploadPage() {
       {previewLine && (
         <section className="card">
           <div className="card-body">
-            <h2 className="h5">Предпросмотр</h2>
+            <h2 className="h5">Предпросмотр прохождения</h2>
             <MapView route={previewLine} />
           </div>
         </section>
