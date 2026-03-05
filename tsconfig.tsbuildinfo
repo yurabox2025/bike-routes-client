@@ -1,1 +1,0 @@
-{"root":["./src/app.tsx","./src/api.ts","./src/auth.tsx","./src/env.ts","./src/main.tsx","./src/types.ts","./src/utils.ts","./src/components/mapview.tsx","./src/components/protectedroute.tsx","./src/pages/activitypage.tsx","./src/pages/homepage.tsx","./src/pages/loginpage.tsx","./src/pages/routepage.tsx","./src/pages/uploadpage.tsx"],"version":"5.9.3"}
