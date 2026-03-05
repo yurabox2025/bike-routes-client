@@ -51,16 +51,16 @@ export function HomePage() {
 
   return (
     <div className="container page-wrap py-4">
-      <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+      <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
         <h1 className="h3 m-0">Маршруты</h1>
-        <div className="d-grid d-sm-flex gap-2">
-          <Link className="btn btn-outline-secondary" to="/routes/new">
+        <div className="d-grid d-sm-flex gap-2 w-100">
+          <Link className="btn btn-outline-secondary w-100" to="/routes/new">
             Создать маршрут
           </Link>
-          <Link className="btn btn-outline-primary" to="/map">
+          <Link className="btn btn-outline-primary w-100" to="/map">
             Общая карта
           </Link>
-          <Link className="btn btn-primary" to="/upload">
+          <Link className="btn btn-primary w-100" to="/upload">
             Загрузить прохождение
           </Link>
         </div>
