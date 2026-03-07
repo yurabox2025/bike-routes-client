@@ -26,6 +26,7 @@ export function UploadPage() {
   const navigate = useNavigate();
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [isRoutesLoading, setIsRoutesLoading] = useState(true);
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [previewLine, setPreviewLine] = useState<LineStringGeoJson | undefined>();
@@ -37,12 +38,19 @@ export function UploadPage() {
 
   useEffect(() => {
     async function loadData() {
-      const [routesResponse, usersResponse] = await Promise.all([
-        apiFetch<{ routes: RouteItem[] }>('/api/routes'),
-        apiFetch<{ users: User[] }>('/api/users')
-      ]);
-      setRoutes(routesResponse.routes);
-      setUsers(usersResponse.users);
+      setIsRoutesLoading(true);
+      try {
+        const [routesResponse, usersResponse] = await Promise.all([
+          apiFetch<{ routes: RouteItem[] }>('/api/routes'),
+          apiFetch<{ users: User[] }>('/api/users')
+        ]);
+        setRoutes(routesResponse.routes);
+        setUsers(usersResponse.users);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Не удалось загрузить список маршрутов');
+      } finally {
+        setIsRoutesLoading(false);
+      }
     }
 
     void loadData();
@@ -116,7 +124,13 @@ export function UploadPage() {
         <div className="card-body">
           <div className="mb-3">
             <label className="form-label">Маршрут (обязательно)</label>
-            <select className="form-select" value={routeId} onChange={(e) => setRouteId(e.target.value)}>
+            {isRoutesLoading && (
+              <div className="d-flex align-items-center gap-2 text-muted mb-2">
+                <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                <span>Загрузка маршрутов...</span>
+              </div>
+            )}
+            <select className="form-select" value={routeId} onChange={(e) => setRouteId(e.target.value)} disabled={isRoutesLoading}>
               <option value="">Выберите маршрут</option>
               {routes.map((route) => (
                 <option key={route.id} value={route.id}>
