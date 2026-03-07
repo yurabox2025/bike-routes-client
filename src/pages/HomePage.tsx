@@ -118,8 +118,14 @@ export function HomePage() {
           <section className="card h-100 shadow-sm border-0">
             <div className="card-body">
               <h2 className="h5">Последние поездки</h2>
-              {recentActivities.length === 0 && <p className="text-muted mb-0">Пока нет поездок.</p>}
-              {recentActivities.length > 0 && (
+              {isLoading && (
+                <div className="d-flex align-items-center gap-2 text-muted mb-2">
+                  <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                  <span>Загрузка поездок...</span>
+                </div>
+              )}
+              {!isLoading && recentActivities.length === 0 && <p className="text-muted mb-0">Пока нет поездок.</p>}
+              {!isLoading && recentActivities.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {recentActivities.map((activity) => (
                     <li key={activity.id} className="border rounded p-2 d-flex flex-wrap align-items-center justify-content-between gap-2 bg-white">
