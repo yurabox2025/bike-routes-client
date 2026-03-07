@@ -11,10 +11,13 @@ export function AllRoutesMapPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [showRouteLines, setShowRouteLines] = useState(true);
+  const [isMapLoading, setIsMapLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
+      setIsMapLoading(true);
+      setError(null);
       try {
         const [activitiesRes, routesRes] = await Promise.all([
           apiFetch<{ activities: Activity[] }>('/api/activities'),
@@ -25,6 +28,8 @@ export function AllRoutesMapPage() {
         setRoutes(routesRes.routes);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load map data');
+      } finally {
+        setIsMapLoading(false);
       }
     }
 
@@ -74,15 +79,17 @@ export function AllRoutesMapPage() {
                   type="button"
                   className={`btn btn-sm ${scope === 'public' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => setScope('public')}
+                  disabled={isMapLoading}
                 >
-                  Общие маршруты
+                  {isMapLoading && scope === 'public' ? 'Загрузка...' : 'Общие маршруты'}
                 </button>
                 <button
                   type="button"
                   className={`btn btn-sm ${scope === 'private' ? 'btn-dark' : 'btn-outline-dark'}`}
                   onClick={() => setScope('private')}
+                  disabled={isMapLoading}
                 >
-                  Мои маршруты
+                  {isMapLoading && scope === 'private' ? 'Загрузка...' : 'Мои маршруты'}
                 </button>
               </div>
               <span className="badge text-bg-danger">Треки: {completedActivities.length}</span>

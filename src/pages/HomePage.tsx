@@ -9,9 +9,12 @@ export function HomePage() {
   const { user } = useAuth();
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const [routesRes, activitiesRes] = await Promise.all([
         apiFetch<{ routes: RouteItem[] }>('/api/routes'),
@@ -21,6 +24,8 @@ export function HomePage() {
       setActivities(activitiesRes.activities);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load data');
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -83,8 +88,14 @@ export function HomePage() {
           <section className="card h-100 shadow-sm border-0">
             <div className="card-body">
               <h2 className="h5">Список маршрутов</h2>
-              {routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Сначала создайте маршрут.</p>}
-              {routes.length > 0 && (
+              {isLoading && (
+                <div className="d-flex align-items-center gap-2 text-muted mb-2">
+                  <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                  <span>Загрузка маршрутов...</span>
+                </div>
+              )}
+              {!isLoading && routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Сначала создайте маршрут.</p>}
+              {!isLoading && routes.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {routes.map((route) => (
                     <li key={route.id} className="border rounded p-2 d-flex align-items-center justify-content-between gap-2 bg-white">
