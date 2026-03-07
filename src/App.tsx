@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { Link, NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { AuthProvider, useAuth } from './auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ActivityPage } from './pages/ActivityPage';
@@ -11,6 +11,12 @@ import { RegisterPage } from './pages/RegisterPage';
 import { RoutePage } from './pages/RoutePage';
 import { UploadPage } from './pages/UploadPage';
 
+const navItems = [
+  { to: '/routes/new', label: 'Создать маршрут' },
+  { to: '/upload', label: 'Загрузить прохождение' },
+  { to: '/routes-list', label: 'Список маршрутов' }
+];
+
 function AppShell() {
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -18,34 +24,36 @@ function AppShell() {
   return (
     <>
       {user && (
-        <nav className="navbar navbar-dark bg-dark fixed-top shadow-sm">
-          <div className="container page-wrap d-flex flex-wrap align-items-center gap-2">
-            <div className="d-flex align-items-center gap-3 flex-grow-1">
-              <Link to="/" className="navbar-brand m-0">
-                Bike Routes
-              </Link>
-              <button
-                type="button"
-                className="navbar-toggler d-lg-none ms-auto"
-                aria-label="Toggle navigation"
-                aria-expanded={menuOpen}
-                onClick={() => setMenuOpen((prev) => !prev)}
-              >
-                <span className="navbar-toggler-icon" />
-              </button>
-              <div className="d-none d-lg-flex flex-wrap align-items-center gap-2">
-                <Link to="/routes/new" className="nav-link px-0 py-1" onClick={() => setMenuOpen(false)}>
-                  Create Route
-                </Link>
-                <Link to="/upload" className="nav-link px-0 py-1" onClick={() => setMenuOpen(false)}>
-                  Upload Completion
-                </Link>
-                <Link to="/map" className="nav-link px-0 py-1" onClick={() => setMenuOpen(false)}>
-                  All Map
-                </Link>
-              </div>
+        <nav className="navbar navbar-dark bg-dark fixed-top app-navbar">
+          <div className="container page-wrap d-flex align-items-center gap-2">
+            <Link to="/" className="navbar-brand m-0">
+              Bike Routes
+            </Link>
+
+            <button
+              type="button"
+              className="navbar-toggler d-md-none ms-auto"
+              aria-label="Toggle navigation"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((prev) => !prev)}
+            >
+              <span className="navbar-toggler-icon" />
+            </button>
+
+            <div className="d-none d-md-flex align-items-center gap-3 ms-3">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => `app-nav-link ${isActive ? 'active' : ''}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
             </div>
-            <div className="ms-auto d-none d-lg-flex align-items-center gap-2 text-white">
+
+            <div className="ms-auto d-none d-md-flex align-items-center gap-2 text-white">
               <span>{user.name}</span>
               <button
                 type="button"
@@ -58,17 +66,21 @@ function AppShell() {
                 Logout
               </button>
             </div>
-            {menuOpen && (
-              <div className="mobile-nav-menu w-100 d-lg-none mt-2">
-                <Link to="/routes/new" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
-                  Create Route
-                </Link>
-                <Link to="/upload" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
-                  Upload Completion
-                </Link>
-                <Link to="/map" className="nav-link py-2" onClick={() => setMenuOpen(false)}>
-                  All Map
-                </Link>
+          </div>
+
+          {menuOpen && (
+            <div className="mobile-nav-menu d-md-none">
+              <div className="container page-wrap py-2 d-grid gap-1">
+                {navItems.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) => `nav-link py-2 ${isActive ? 'active' : ''}`}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
                 <div className="d-flex align-items-center justify-content-between pt-2 mt-2 border-top border-secondary-subtle">
                   <span className="text-white-50 small">{user.name}</span>
                   <button
@@ -83,8 +95,8 @@ function AppShell() {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </nav>
       )}
 
@@ -94,6 +106,14 @@ function AppShell() {
           <Route path="/register" element={<RegisterPage />} />
           <Route
             path="/"
+            element={
+              <ProtectedRoute>
+                <AllRoutesMapPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/routes-list"
             element={
               <ProtectedRoute>
                 <HomePage />
@@ -121,6 +141,14 @@ function AppShell() {
             element={
               <ProtectedRoute>
                 <AllRoutesMapPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/my-map"
+            element={
+              <ProtectedRoute>
+                <Navigate to="/" replace />
               </ProtectedRoute>
             }
           />

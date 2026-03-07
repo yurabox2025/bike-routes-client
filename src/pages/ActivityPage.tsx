@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch } from '../api';
+import { useAuth } from '../auth';
 import { MapView } from '../components/MapView';
 import type { Activity, RouteItem, User } from '../types';
 import { formatDate, formatDistanceMeters } from '../utils';
@@ -17,6 +18,7 @@ function normalizeParticipantIds(activity: Activity): string[] {
 }
 
 export function ActivityPage() {
+  const { user } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [activity, setActivity] = useState<Activity | null>(null);
@@ -130,6 +132,8 @@ export function ActivityPage() {
     );
   }
 
+  const canDeleteActivity = Boolean(user && (user.role === 'admin' || user.id === activity.userId));
+
   return (
     <div className="container page-wrap py-4">
       <h1 className="h3 mb-3">Поездка</h1>
@@ -213,15 +217,17 @@ export function ActivityPage() {
         </div>
       </section>
 
-      <section className="card mt-3 border-danger">
-        <div className="card-body">
-          <h2 className="h5 text-danger">Опасная зона</h2>
-          <p className="mb-3">Удаление уберет прохождение маршрута и трек из списка.</p>
-          <button type="button" className="btn btn-danger" onClick={deleteActivity}>
-            Удалить пройденный маршрут
-          </button>
-        </div>
-      </section>
+      {canDeleteActivity && (
+        <section className="card mt-3 border-danger">
+          <div className="card-body">
+            <h2 className="h5 text-danger">Опасная зона</h2>
+            <p className="mb-3">Удаление уберет прохождение маршрута и трек из списка.</p>
+            <button type="button" className="btn btn-danger" onClick={deleteActivity}>
+              Удалить пройденный маршрут
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

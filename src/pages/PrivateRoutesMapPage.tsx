@@ -4,10 +4,7 @@ import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
 import type { Activity, RouteItem } from '../types';
 
-type MapScope = 'public' | 'private';
-
-export function AllRoutesMapPage() {
-  const [scope, setScope] = useState<MapScope>('public');
+export function PrivateRoutesMapPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [showRouteLines, setShowRouteLines] = useState(true);
@@ -18,23 +15,26 @@ export function AllRoutesMapPage() {
       try {
         const [activitiesRes, routesRes] = await Promise.all([
           apiFetch<{ activities: Activity[] }>('/api/activities'),
-          apiFetch<{ routes: RouteItem[] }>(`/api/routes?scope=${scope}`)
+          apiFetch<{ routes: RouteItem[] }>('/api/routes?scope=private')
         ]);
 
         setActivities(activitiesRes.activities);
         setRoutes(routesRes.routes);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load map data');
+        setError(err instanceof Error ? err.message : 'Failed to load private map data');
       }
     }
 
     void load();
-  }, [scope]);
+  }, []);
 
-  const completedActivities = useMemo(() => {
-    const routeIds = new Set(routes.map((route) => route.id));
-    return activities.filter((activity) => activity.routeId && routeIds.has(activity.routeId));
-  }, [activities, routes]);
+  const completedActivities = useMemo(
+    () => {
+      const privateRouteIds = new Set(routes.map((route) => route.id));
+      return activities.filter((activity) => activity.routeId && privateRouteIds.has(activity.routeId));
+    },
+    [activities, routes]
+  );
 
   const overlays = useMemo(
     () => [
@@ -47,18 +47,18 @@ export function AllRoutesMapPage() {
         ? routes.map((route) => ({
             id: `route-${route.id}`,
             line: route.routeLineGeoJson,
-            color: scope === 'public' ? '#0d6efd' : '#6f42c1'
+            color: '#6f42c1'
           }))
         : [])
     ],
-    [completedActivities, routes, showRouteLines, scope]
+    [completedActivities, routes, showRouteLines]
   );
 
   return (
     <div className="container page-wrap py-4">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-        <h1 className="h3 m-0">Карта маршрутов</h1>
-        <Link className="btn btn-outline-primary" to="/routes-list">
+        <h1 className="h3 m-0">Моя приватная карта</h1>
+        <Link className="btn btn-outline-primary" to="/">
           К списку маршрутов
         </Link>
       </div>
@@ -68,35 +68,19 @@ export function AllRoutesMapPage() {
       <div className="card mb-3">
         <div className="card-body">
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
-            <div className="d-flex flex-wrap gap-2 align-items-center">
-              <div className="btn-group" role="group" aria-label="Route scope switcher">
-                <button
-                  type="button"
-                  className={`btn btn-sm ${scope === 'public' ? 'btn-primary' : 'btn-outline-primary'}`}
-                  onClick={() => setScope('public')}
-                >
-                  Общие маршруты
-                </button>
-                <button
-                  type="button"
-                  className={`btn btn-sm ${scope === 'private' ? 'btn-dark' : 'btn-outline-dark'}`}
-                  onClick={() => setScope('private')}
-                >
-                  Мои маршруты
-                </button>
-              </div>
-              <span className="badge text-bg-danger">Треки: {completedActivities.length}</span>
-              <span className={`badge ${scope === 'public' ? 'text-bg-primary' : 'text-bg-dark'}`}>Маршруты: {routes.length}</span>
+            <div className="d-flex flex-wrap gap-3">
+              <span className="badge text-bg-danger">Треки прохождений: {completedActivities.length}</span>
+              <span className="badge text-bg-dark">Приватные маршруты: {routes.length}</span>
             </div>
             <div className="form-check m-0">
               <input
-                id="showRouteLines"
+                id="showPrivateRouteLines"
                 className="form-check-input"
                 type="checkbox"
                 checked={showRouteLines}
                 onChange={(event) => setShowRouteLines(event.target.checked)}
               />
-              <label className="form-check-label" htmlFor="showRouteLines">
+              <label className="form-check-label" htmlFor="showPrivateRouteLines">
                 Показывать линии маршрутов
               </label>
             </div>

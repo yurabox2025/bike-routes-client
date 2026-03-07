@@ -9,6 +9,19 @@ function getSelectedValues(select: HTMLSelectElement): string[] {
   return Array.from(select.selectedOptions).map((option) => option.value);
 }
 
+function fileMeta(file: File | null): { ext: string; sizeMb: string; isGpx: boolean } | null {
+  if (!file) {
+    return null;
+  }
+  const dotIndex = file.name.lastIndexOf('.');
+  const ext = dotIndex >= 0 ? file.name.slice(dotIndex + 1).toLowerCase() : '';
+  return {
+    ext: ext || 'unknown',
+    sizeMb: (file.size / (1024 * 1024)).toFixed(2),
+    isGpx: ext === 'gpx'
+  };
+}
+
 export function UploadPage() {
   const navigate = useNavigate();
   const [routes, setRoutes] = useState<RouteItem[]>([]);
@@ -20,6 +33,7 @@ export function UploadPage() {
   const [routeId, setRouteId] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const meta = fileMeta(file);
 
   useEffect(() => {
     async function loadData() {
@@ -113,7 +127,21 @@ export function UploadPage() {
           </div>
           <div className="mb-3">
             <label className="form-label">GPX файл прохождения</label>
-            <input className="form-control" type="file" accept=".gpx" onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)} />
+            <input
+              className="form-control"
+              type="file"
+              accept=".gpx,application/gpx+xml"
+              onChange={(e) => void handleFileChange(e.target.files?.[0] ?? null)}
+            />
+            <div className="form-text">Допустимый формат: `.gpx`</div>
+            {meta && (
+              <div className="small mt-1">
+                <span className={`badge me-2 ${meta.isGpx ? 'text-bg-success' : 'text-bg-danger'}`}>{meta.isGpx ? 'GPX' : 'Не GPX'}</span>
+                <span className="me-2">Файл: {file!.name}</span>
+                <span className="me-2">Расширение: .{meta.ext}</span>
+                <span>Размер: {meta.sizeMb} MB</span>
+              </div>
+            )}
           </div>
           <div className="mb-3">
             <label className="form-label">Privacy cut (метров в начале/конце)</label>

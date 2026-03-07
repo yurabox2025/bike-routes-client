@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../api';
+import { useAuth } from '../auth';
 import type { Activity, RouteItem } from '../types';
 import { formatDate, formatDistanceMeters } from '../utils';
 
 export function HomePage() {
+  const { user } = useAuth();
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +42,18 @@ export function HomePage() {
     }
   };
 
+  const setRouteVisibility = async (routeId: string, visibility: 'public' | 'private') => {
+    try {
+      await apiFetch<{ route: RouteItem }>(`/api/routes/${routeId}/visibility`, {
+        method: 'PATCH',
+        body: JSON.stringify({ visibility })
+      });
+      await loadData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update route visibility');
+    }
+  };
+
   const recentActivities = useMemo(
     () =>
       [...activities]
@@ -49,35 +63,35 @@ export function HomePage() {
     [activities]
   );
 
+  const routesById = useMemo(() => {
+    const map = new Map<string, RouteItem>();
+    for (const route of routes) {
+      map.set(route.id, route);
+    }
+    return map;
+  }, [routes]);
+
   return (
     <div className="container page-wrap py-4">
-      <div className="d-flex flex-column flex-md-row align-items-stretch align-items-md-center justify-content-between gap-2 mb-3">
+      <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
         <h1 className="h3 m-0">Маршруты</h1>
-        <div className="d-grid d-sm-flex gap-2 w-100">
-          <Link className="btn btn-outline-secondary w-100" to="/routes/new">
-            Создать маршрут
-          </Link>
-          <Link className="btn btn-outline-primary w-100" to="/map">
-            Общая карта
-          </Link>
-          <Link className="btn btn-primary w-100" to="/upload">
-            Загрузить прохождение
-          </Link>
-        </div>
       </div>
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="row g-3">
         <div className="col-12 col-lg-6">
-          <section className="card h-100">
+          <section className="card h-100 shadow-sm border-0">
             <div className="card-body">
               <h2 className="h5">Список маршрутов</h2>
               {routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет. Сначала создайте маршрут.</p>}
               {routes.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {routes.map((route) => (
-                    <li key={route.id} className="border rounded p-2 d-flex align-items-center justify-content-between gap-2">
-                      <Link to={`/routes/${route.id}`}>{route.name}</Link>
+                    <li key={route.id} className="border rounded p-2 d-flex align-items-center justify-content-between gap-2 bg-white">
+                      <div className="d-flex flex-column">
+                        <Link to={`/routes/${route.id}`}>{route.name}</Link>
+                        <small className="text-muted">{route.visibility === 'private' ? 'Приватный' : 'Публичный'}</small>
+                      </div>
                       <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void deleteRoute(route.id)}>
                         Удалить
                       </button>
@@ -90,16 +104,32 @@ export function HomePage() {
         </div>
 
         <div className="col-12 col-lg-6">
-          <section className="card h-100">
+          <section className="card h-100 shadow-sm border-0">
             <div className="card-body">
               <h2 className="h5">Последние поездки</h2>
               {recentActivities.length === 0 && <p className="text-muted mb-0">Пока нет поездок.</p>}
               {recentActivities.length > 0 && (
-                <ul className="mb-0">
+                <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {recentActivities.map((activity) => (
-                    <li key={activity.id}>
-                      <Link to={`/activities/${activity.id}`}>{formatDate(activity.startedAt)}</Link>
-                      <span> · {formatDistanceMeters(activity.distanceMeters)}</span>
+                    <li key={activity.id} className="border rounded p-2 d-flex flex-wrap align-items-center justify-content-between gap-2 bg-white">
+                      <div>
+                        <Link to={`/activities/${activity.id}`}>{formatDate(activity.startedAt)}</Link>
+                        <span> · {formatDistanceMeters(activity.distanceMeters)}</span>
+                      </div>
+                      {activity.routeId &&
+                        routesById.get(activity.routeId) &&
+                        user &&
+                        (user.role === 'admin' || routesById.get(activity.routeId)!.createdBy === user.id) && (
+                        <select
+                          className="form-select form-select-sm"
+                          style={{ width: '170px' }}
+                          value={routesById.get(activity.routeId)!.visibility}
+                          onChange={(event) => void setRouteVisibility(activity.routeId!, event.target.value as 'public' | 'private')}
+                        >
+                          <option value="private">Приватный</option>
+                          <option value="public">Публичный</option>
+                        </select>
+                      )}
                     </li>
                   ))}
                 </ul>
