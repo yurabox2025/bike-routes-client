@@ -10,6 +10,13 @@ function getSelectedValues(select: HTMLSelectElement): string[] {
   return Array.from(select.selectedOptions).map((option) => option.value);
 }
 
+function sanitizeFilenamePart(name: string): string {
+  return name
+    .replace(/[\\/:*?"<>|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function RoutePage() {
   const { user } = useAuth();
   const { id } = useParams();
@@ -76,7 +83,8 @@ export function RoutePage() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${route.id}.gpx`;
+      const filename = sanitizeFilenamePart(route.name) || route.id;
+      link.download = `${filename}.gpx`;
       document.body.appendChild(link);
       link.click();
       link.remove();

@@ -5,6 +5,13 @@ import { useAuth } from '../auth';
 import type { RouteItem, User } from '../types';
 import { formatDate } from '../utils';
 
+function sanitizeFilenamePart(name: string): string {
+  return name
+    .replace(/[\\/:*?"<>|]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 export function HomePage() {
   const { user } = useAuth();
   const [routes, setRoutes] = useState<RouteItem[]>([]);
@@ -48,14 +55,15 @@ export function HomePage() {
     }
   };
 
-  const downloadRoute = async (routeId: string) => {
+  const downloadRoute = async (routeId: string, routeName: string) => {
     try {
       setDownloadingRouteId(routeId);
       const blob = await apiFetchBlob(`/api/routes/${routeId}/download`);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${routeId}.gpx`;
+      const filename = sanitizeFilenamePart(routeName) || routeId;
+      link.download = `${filename}.gpx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -103,7 +111,7 @@ export function HomePage() {
                             type="button"
                             className="btn btn-sm btn-outline-secondary"
                             disabled={downloadingRouteId === route.id}
-                            onClick={() => void downloadRoute(route.id)}
+                            onClick={() => void downloadRoute(route.id, route.name)}
                           >
                             {downloadingRouteId === route.id ? 'Скачиваем...' : 'Скачать GPX'}
                           </button>

@@ -22,6 +22,15 @@ function fileMeta(file: File | null): { ext: string; sizeMb: string; isGpx: bool
   };
 }
 
+function routeNameFromFileName(fileName: string): string {
+  const trimmed = fileName.trim();
+  if (!trimmed) {
+    return '';
+  }
+  const dotIndex = trimmed.lastIndexOf('.');
+  return (dotIndex > 0 ? trimmed.slice(0, dotIndex) : trimmed).trim();
+}
+
 export function UploadPage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<User[]>([]);
@@ -62,6 +71,10 @@ export function UploadPage() {
       return;
     }
 
+    if (!routeName.trim()) {
+      setRouteName(routeNameFromFileName(nextFile.name));
+    }
+
     try {
       const preview = await parseGpxPreview(nextFile);
       setPreviewLine(preview);
@@ -77,17 +90,14 @@ export function UploadPage() {
       setError('Нужно выбрать GPX файл');
       return;
     }
-    if (!routeName.trim()) {
-      setError('Нужно указать название маршрута.');
-      return;
-    }
-
     setSaving(true);
     setError(null);
 
     const formData = new FormData();
     formData.append('gpx', file);
-    formData.append('routeName', routeName.trim());
+    if (routeName.trim()) {
+      formData.append('routeName', routeName.trim());
+    }
     formData.append('routeVisibility', routeVisibility);
     formData.append('routeRating', String(routeRating));
     if (trimMeters > 0) {
@@ -194,7 +204,7 @@ export function UploadPage() {
             <div className="form-text">Можно выбрать несколько. Автор загрузки добавляется автоматически.</div>
           </div>
           {error && <div className="alert alert-danger py-2">{error}</div>}
-          <button type="submit" className="btn btn-primary" disabled={saving || !routeName.trim()}>
+          <button type="submit" className="btn btn-primary" disabled={saving}>
             {saving ? 'Сохраняем...' : 'Сохранить прохождение'}
           </button>
         </div>
