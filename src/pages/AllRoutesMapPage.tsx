@@ -6,6 +6,16 @@ import type { RouteItem } from '../types';
 
 type MapScope = 'public' | 'private';
 
+const ROUTE_COLORS = ['#0d6efd', '#20c997', '#fd7e14', '#dc3545', '#6f42c1', '#198754', '#e83e8c', '#0dcaf0', '#795548'];
+
+function routeColorById(routeId: string): string {
+  let hash = 0;
+  for (let index = 0; index < routeId.length; index += 1) {
+    hash = (hash * 31 + routeId.charCodeAt(index)) >>> 0;
+  }
+  return ROUTE_COLORS[hash % ROUTE_COLORS.length];
+}
+
 export function AllRoutesMapPage() {
   const [scope, setScope] = useState<MapScope>('public');
   const [routes, setRoutes] = useState<RouteItem[]>([]);
@@ -36,7 +46,7 @@ export function AllRoutesMapPage() {
         ? routes.map((route) => ({
             id: `route-${route.id}`,
             line: route.routeLineGeoJson,
-            color: scope === 'public' ? '#0d6efd' : '#6f42c1'
+            color: routeColorById(route.id)
           }))
         : [])
     ],
