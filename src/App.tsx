@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './auth';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ActivityPage } from './pages/ActivityPage';
 import { AllRoutesMapPage } from './pages/AllRoutesMapPage';
-import { CreateRoutePage } from './pages/CreateRoutePage';
 import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -12,7 +11,6 @@ import { RoutePage } from './pages/RoutePage';
 import { UploadPage } from './pages/UploadPage';
 
 const navItems = [
-  { to: '/routes/new', label: 'Создать маршрут' },
   { to: '/upload', label: 'Загрузить прохождение' },
   { to: '/routes-list', label: 'Список маршрутов' }
 ];
@@ -124,7 +122,7 @@ function AppShell() {
             path="/routes/new"
             element={
               <ProtectedRoute>
-                <CreateRoutePage />
+                <Navigate to="/upload" replace />
               </ProtectedRoute>
             }
           />

@@ -44,6 +44,68 @@ body {
   flex-wrap: wrap;
 }
 
+.route-meta-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.route-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.route-meta-title {
+  font-weight: 700;
+  color: #212529;
+}
+
+.route-meta-text {
+  color: #495057;
+  font-size: 0.95rem;
+}
+
+.route-meta-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.route-meta-pills {
+  gap: 0.625rem;
+}
+
+.route-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f3f5f7;
+  border: 1px solid #e2e6ea;
+  border-radius: 999px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.9rem;
+  color: #343a40;
+}
+
+.route-participants {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.route-user-badge {
+  color: #1f2a37;
+  font-weight: 500;
+}
+
+.route-manage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 260px));
+  gap: 0.75rem 1rem;
+}
+
 @media (max-width: 767.98px) {
   .with-fixed-header {
     padding-top: 68px;
@@ -68,6 +130,30 @@ body {
   .quick-actions {
     width: 100%;
     display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .route-meta-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .route-meta-pill {
+    width: 100%;
+    border-radius: 0.625rem;
+    justify-content: space-between;
+  }
+
+  .route-meta-actions {
+    width: 100%;
+  }
+
+  .route-meta-actions .btn {
+    width: 100%;
+  }
+
+  .route-manage-grid {
     grid-template-columns: 1fr;
   }
 }

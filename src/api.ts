@@ -46,3 +46,31 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
 
   return (await response.json()) as T;
 }
+
+export async function apiFetchBlob(path: string, init: RequestInit = {}): Promise<Blob> {
+  const token = getToken();
+  const headers = new Headers(init.headers);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...init,
+    headers
+  });
+
+  if (!response.ok) {
+    let message = `HTTP ${response.status}`;
+    try {
+      const json = (await response.json()) as { message?: string };
+      if (json.message) {
+        message = json.message;
+      }
+    } catch {
+      // Ignore parse errors and keep default message.
+    }
+    throw new Error(message);
+  }
+
+  return response.blob();
+}

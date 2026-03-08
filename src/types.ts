@@ -16,6 +16,12 @@ export interface RouteItem {
   name: string;
   createdBy: string;
   visibility: 'public' | 'private';
+  rating?: number | null;
+  participantUserIds?: string[];
+  gpxStorage?: {
+    provider: 'yadisk' | 'local';
+    pathOrUrl: string;
+  };
   routeLineGeoJson: LineStringGeoJson;
   createdAt: string;
 }

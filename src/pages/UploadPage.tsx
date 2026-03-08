@@ -1,8 +1,8 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
-import type { Activity, LineStringGeoJson, RouteItem, User } from '../types';
+import type { LineStringGeoJson, RouteItem, User } from '../types';
 import { parseGpxPreview } from '../utils';
 
 function getSelectedValues(select: HTMLSelectElement): string[] {
@@ -24,36 +24,33 @@ function fileMeta(file: File | null): { ext: string; sizeMb: string; isGpx: bool
 
 export function UploadPage() {
   const navigate = useNavigate();
-  const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
-  const [isRoutesLoading, setIsRoutesLoading] = useState(true);
+  const [isUsersLoading, setIsUsersLoading] = useState(true);
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [previewLine, setPreviewLine] = useState<LineStringGeoJson | undefined>();
   const [trimMeters, setTrimMeters] = useState(0);
-  const [routeId, setRouteId] = useState('');
+  const [routeName, setRouteName] = useState('');
+  const [routeVisibility, setRouteVisibility] = useState<'private' | 'public'>('private');
+  const [routeRating, setRouteRating] = useState(7);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const meta = fileMeta(file);
 
   useEffect(() => {
-    async function loadData() {
-      setIsRoutesLoading(true);
+    async function loadUsers() {
+      setIsUsersLoading(true);
       try {
-        const [routesResponse, usersResponse] = await Promise.all([
-          apiFetch<{ routes: RouteItem[] }>('/api/routes'),
-          apiFetch<{ users: User[] }>('/api/users')
-        ]);
-        setRoutes(routesResponse.routes);
+        const usersResponse = await apiFetch<{ users: User[] }>('/api/users');
         setUsers(usersResponse.users);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Не удалось загрузить список маршрутов');
+        setError(err instanceof Error ? err.message : 'Не удалось загрузить список пользователей');
       } finally {
-        setIsRoutesLoading(false);
+        setIsUsersLoading(false);
       }
     }
 
-    void loadData();
+    void loadUsers();
   }, []);
 
   const handleFileChange = async (nextFile: File | null) => {
@@ -80,8 +77,8 @@ export function UploadPage() {
       setError('Нужно выбрать GPX файл');
       return;
     }
-    if (!routeId) {
-      setError('Сначала выберите маршрут. Маршрут создается отдельно на странице создания маршрута.');
+    if (!routeName.trim()) {
+      setError('Нужно указать название маршрута.');
       return;
     }
 
@@ -90,7 +87,9 @@ export function UploadPage() {
 
     const formData = new FormData();
     formData.append('gpx', file);
-    formData.append('routeId', routeId);
+    formData.append('routeName', routeName.trim());
+    formData.append('routeVisibility', routeVisibility);
+    formData.append('routeRating', String(routeRating));
     if (trimMeters > 0) {
       formData.append('trimMeters', String(trimMeters));
     }
@@ -99,12 +98,12 @@ export function UploadPage() {
     }
 
     try {
-      const response = await apiFetch<{ activity: Activity }>('/api/activities', {
+      const response = await apiFetch<{ route: RouteItem }>('/api/routes/upload', {
         method: 'POST',
         body: formData
       });
 
-      navigate(`/activities/${response.activity.id}`);
+      navigate(`/routes/${response.route.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Сохранение не удалось');
     } finally {
@@ -116,25 +115,34 @@ export function UploadPage() {
     <div className="container page-wrap py-4">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
         <h1 className="h3 m-0">Загрузка прохождения маршрута</h1>
-        <Link className="btn btn-outline-primary" to="/routes/new">
-          Сначала создать маршрут
-        </Link>
       </div>
       <form className="card mb-3" onSubmit={handleSubmit}>
         <div className="card-body">
           <div className="mb-3">
-            <label className="form-label">Маршрут (обязательно)</label>
-            {isRoutesLoading && (
-              <div className="d-flex align-items-center gap-2 text-muted mb-2">
-                <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
-                <span>Загрузка маршрутов...</span>
-              </div>
-            )}
-            <select className="form-select" value={routeId} onChange={(e) => setRouteId(e.target.value)} disabled={isRoutesLoading}>
-              <option value="">Выберите маршрут</option>
-              {routes.map((route) => (
-                <option key={route.id} value={route.id}>
-                  {route.name}
+            <label className="form-label">Название маршрута (обязательно)</label>
+            <input
+              className="form-control"
+              type="text"
+              maxLength={120}
+              value={routeName}
+              onChange={(e) => setRouteName(e.target.value)}
+              placeholder="Например: Дрочево - Конаково"
+            />
+            <div className="form-text">Предварительное создание маршрута не требуется. Маршрут будет создан автоматически при загрузке.</div>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Доступ маршрута</label>
+            <select className="form-select" value={routeVisibility} onChange={(e) => setRouteVisibility(e.target.value as 'private' | 'public')}>
+              <option value="private">Приватный</option>
+              <option value="public">Публичный</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Рейтинг маршрута (1-10)</label>
+            <select className="form-select" value={routeRating} onChange={(e) => setRouteRating(Number(e.target.value))}>
+              {Array.from({ length: 10 }, (_, index) => (
+                <option key={index + 1} value={index + 1}>
+                  {index + 1}
                 </option>
               ))}
             </select>
@@ -163,11 +171,18 @@ export function UploadPage() {
           </div>
           <div className="mb-3">
             <label className="form-label">Отметить пользователей, которые проехали</label>
+            {isUsersLoading && (
+              <div className="d-flex align-items-center gap-2 text-muted mb-2">
+                <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+                <span>Загрузка пользователей...</span>
+              </div>
+            )}
             <select
               className="form-select"
               multiple
               size={Math.min(Math.max(users.length, 3), 8)}
               value={selectedParticipantIds}
+              disabled={isUsersLoading}
               onChange={(e) => setSelectedParticipantIds(getSelectedValues(e.currentTarget))}
             >
               {users.map((user) => (
@@ -179,7 +194,7 @@ export function UploadPage() {
             <div className="form-text">Можно выбрать несколько. Автор загрузки добавляется автоматически.</div>
           </div>
           {error && <div className="alert alert-danger py-2">{error}</div>}
-          <button type="submit" className="btn btn-primary" disabled={saving}>
+          <button type="submit" className="btn btn-primary" disabled={saving || !routeName.trim()}>
             {saving ? 'Сохраняем...' : 'Сохранить прохождение'}
           </button>
         </div>

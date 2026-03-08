@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
-import type { Activity, RouteItem } from '../types';
+import type { RouteItem } from '../types';
 
 type MapScope = 'public' | 'private';
 
 export function AllRoutesMapPage() {
   const [scope, setScope] = useState<MapScope>('public');
-  const [activities, setActivities] = useState<Activity[]>([]);
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [showRouteLines, setShowRouteLines] = useState(true);
   const [isMapLoading, setIsMapLoading] = useState(true);
@@ -19,12 +18,7 @@ export function AllRoutesMapPage() {
       setIsMapLoading(true);
       setError(null);
       try {
-        const [activitiesRes, routesRes] = await Promise.all([
-          apiFetch<{ activities: Activity[] }>('/api/activities'),
-          apiFetch<{ routes: RouteItem[] }>(`/api/routes?scope=${scope}`)
-        ]);
-
-        setActivities(activitiesRes.activities);
+        const routesRes = await apiFetch<{ routes: RouteItem[] }>(`/api/routes?scope=${scope}`);
         setRoutes(routesRes.routes);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load map data');
@@ -36,18 +30,8 @@ export function AllRoutesMapPage() {
     void load();
   }, [scope]);
 
-  const completedActivities = useMemo(() => {
-    const routeIds = new Set(routes.map((route) => route.id));
-    return activities.filter((activity) => activity.routeId && routeIds.has(activity.routeId));
-  }, [activities, routes]);
-
   const overlays = useMemo(
     () => [
-      ...completedActivities.map((activity) => ({
-        id: `activity-${activity.id}`,
-        line: activity.polylineGeoJson,
-        color: '#e55353'
-      })),
       ...(showRouteLines
         ? routes.map((route) => ({
             id: `route-${route.id}`,
@@ -56,7 +40,7 @@ export function AllRoutesMapPage() {
           }))
         : [])
     ],
-    [completedActivities, routes, showRouteLines, scope]
+    [routes, showRouteLines, scope]
   );
 
   return (
@@ -92,7 +76,6 @@ export function AllRoutesMapPage() {
                   {isMapLoading && scope === 'private' ? 'Загрузка...' : 'Мои маршруты'}
                 </button>
               </div>
-              <span className="badge text-bg-danger">Треки: {completedActivities.length}</span>
               <span className={`badge ${scope === 'public' ? 'text-bg-primary' : 'text-bg-dark'}`}>Маршруты: {routes.length}</span>
             </div>
             <div className="form-check m-0">

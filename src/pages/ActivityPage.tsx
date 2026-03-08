@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { apiFetch } from '../api';
+import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
 import { MapView } from '../components/MapView';
 import type { Activity, RouteItem, User } from '../types';
@@ -26,6 +26,7 @@ export function ActivityPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selectedRoute, setSelectedRoute] = useState('');
   const [selectedParticipantIds, setSelectedParticipantIds] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,6 +127,29 @@ export function ActivityPage() {
     }
   };
 
+  const downloadActivity = async () => {
+    if (!activity) {
+      return;
+    }
+
+    try {
+      setIsDownloading(true);
+      const blob = await apiFetchBlob(`/api/activities/${activity.id}/download`);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${activity.id}.gpx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to download GPX');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   if (!activity) {
     return (
       <div className="container page-wrap py-4">{error ? <div className="alert alert-danger">{error}</div> : <p>Loading...</p>}</div>
@@ -153,6 +177,9 @@ export function ActivityPage() {
           <p className="mb-0">
             <strong>Отмечено участников:</strong> {normalizeParticipantIds(activity).length}
           </p>
+          <button type="button" className="btn btn-outline-secondary btn-sm mt-3" disabled={isDownloading} onClick={downloadActivity}>
+            {isDownloading ? 'Скачиваем...' : 'Скачать GPX'}
+          </button>
         </div>
       </section>
 
