@@ -120,8 +120,8 @@ body {
 .map-mini-list {
   border: 1px solid #dee2e6;
   border-radius: 0.5rem;
-  padding: 0.5rem;
-  max-height: 220px;
+  padding: 0.4rem;
+  max-height: 620px;
   overflow: auto;
   background: #fff;
 }
@@ -164,15 +164,31 @@ body {
 .map-mini-title {
   display: flex;
   align-items: center;
-  font-weight: 600;
+  font-weight: 500;
   color: #212529;
   gap: 0.35rem;
+  font-size: 0.84rem;
 }
 
 .map-mini-meta {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   color: #6c757d;
+}
+
+.map-layout {
+  display: grid;
+  grid-template-columns: 1fr 190px;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.map-layout-canvas {
+  min-width: 0;
+}
+
+.map-layout-legend {
+  min-width: 0;
 }
 
 .map-mobile-panel-backdrop {
@@ -280,5 +296,14 @@ body {
 
   .map-back-btn {
     width: 100%;
+  }
+
+  .map-layout {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .map-layout-legend .map-mini-list {
+    max-height: 220px;
   }
 }

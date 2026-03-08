@@ -7,7 +7,7 @@ import { formatDate, formatDistanceMeters, lineDistanceMeters } from '../utils';
 
 type MapScope = 'public' | 'private';
 
-const ROUTE_COLORS = ['#0d6efd', '#20c997', '#fd7e14', '#dc3545', '#6f42c1', '#198754', '#e83e8c', '#0dcaf0', '#795548'];
+const ROUTE_COLORS = ['#ff1744', '#00b0ff', '#00e676', '#ff9100', '#d500f9', '#ffd600', '#00e5ff', '#76ff03', '#ff4081'];
 
 function routeColorById(routeId: string): string {
   let hash = 0;
@@ -26,7 +26,6 @@ export function AllRoutesMapPage() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [fitBoundsToken, setFitBoundsToken] = useState(0);
   const [resetViewToken, setResetViewToken] = useState(0);
-  const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -104,7 +103,7 @@ export function AllRoutesMapPage() {
           <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 map-controls-wrap">
             <div className="d-flex flex-wrap gap-2 align-items-center map-filter-row">
               <div className="btn-group" role="group" aria-label="Route scope switcher">
-                <button
+              <button
                   type="button"
                   className={`btn btn-sm ${scope === 'public' ? 'btn-primary' : 'btn-outline-primary'}`}
                   onClick={() => setScope('public')}
@@ -141,9 +140,6 @@ export function AllRoutesMapPage() {
                 Показывать линии маршрутов
               </label>
             </div>
-            <button type="button" className="btn btn-sm btn-outline-dark d-md-none" onClick={() => setMobilePanelOpen(true)}>
-              Фильтры и легенда
-            </button>
           </div>
 
           {selectedRoute && (
@@ -151,27 +147,6 @@ export function AllRoutesMapPage() {
               <strong>{selectedRoute.name}</strong> · {formatDistanceMeters(lineDistanceMeters(selectedRoute.routeLineGeoJson.coordinates))}
             </div>
           )}
-
-          <div className="map-legend-list d-none d-md-flex mb-3">
-            <div className="map-mini-list">
-              {sortedRoutes.map((route) => (
-                <button
-                  key={`mini-${route.id}`}
-                  type="button"
-                  className={`map-mini-item ${selectedRouteId === route.id ? 'active' : ''}`}
-                  onClick={() => toggleSelectedRoute(route.id)}
-                >
-                  <span className="map-mini-title">
-                    <span className="map-legend-dot" style={{ backgroundColor: routeColorById(route.id) }} />
-                    {route.name}
-                  </span>
-                  <span className="map-mini-meta">
-                    {formatDate(route.createdAt)} · {formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
           <MapView
             overlays={overlays}
@@ -182,52 +157,6 @@ export function AllRoutesMapPage() {
           />
         </div>
       </div>
-
-      {mobilePanelOpen && (
-        <div className="map-mobile-panel-backdrop d-md-none" onClick={() => setMobilePanelOpen(false)}>
-          <div className="map-mobile-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="d-flex justify-content-between align-items-center mb-2">
-              <strong>Фильтры и легенда</strong>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setMobilePanelOpen(false)}>
-                Закрыть
-              </button>
-            </div>
-            <div className="d-grid gap-2 mb-2">
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setFitBoundsToken((prev) => prev + 1)}>
-                Подогнать маршруты
-              </button>
-              <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setResetViewToken((prev) => prev + 1)}>
-                Сброс вида
-              </button>
-            </div>
-            <div className="form-check m-0 mb-2">
-              <input
-                id="showRouteLinesMobile"
-                className="form-check-input"
-                type="checkbox"
-                checked={showRouteLines}
-                onChange={(event) => setShowRouteLines(event.target.checked)}
-              />
-              <label className="form-check-label" htmlFor="showRouteLinesMobile">
-                Показывать линии маршрутов
-              </label>
-            </div>
-            <div className="map-legend">
-              {sortedRoutes.map((route) => (
-                <button
-                  key={`mobile-${route.id}`}
-                  type="button"
-                  className={`map-legend-item ${selectedRouteId === route.id ? 'active' : ''}`}
-                  onClick={() => toggleSelectedRoute(route.id)}
-                >
-                  <span className="map-legend-dot" style={{ backgroundColor: routeColorById(route.id) }} />
-                  <span className="map-legend-name">{route.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

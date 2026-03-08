@@ -175,24 +175,39 @@ export function MapView({
         if (item.latLngs.length < 2) {
           return null;
         }
+        const baseWeight = item.weight ?? (item.selected ? 5 : 3);
+        const baseOpacity = item.opacity ?? (item.selected ? 1 : 0.7);
         return (
-          <Polyline
-            key={item.id}
-            positions={item.latLngs}
-            color={item.color ?? '#e95157'}
-            weight={item.weight ?? (item.selected ? 5 : 3)}
-            opacity={item.opacity ?? (item.selected ? 1 : 0.7)}
-            eventHandlers={{
-              click: () => onOverlaySelect?.(item.id)
-            }}
-          >
-            {(item.label || item.subtitle) && (
-              <Tooltip direction="top" sticky>
-                {item.label && <div><strong>{item.label}</strong></div>}
-                {item.subtitle && <div>{item.subtitle}</div>}
-              </Tooltip>
-            )}
-          </Polyline>
+          <>
+            <Polyline
+              key={`${item.id}-halo`}
+              positions={item.latLngs}
+              color="#1f2937"
+              weight={baseWeight + 2}
+              opacity={Math.min(1, baseOpacity + 0.2)}
+              lineCap="round"
+              lineJoin="round"
+            />
+            <Polyline
+              key={item.id}
+              positions={item.latLngs}
+              color={item.color ?? '#e95157'}
+              weight={baseWeight}
+              opacity={baseOpacity}
+              lineCap="round"
+              lineJoin="round"
+              eventHandlers={{
+                click: () => onOverlaySelect?.(item.id)
+              }}
+            >
+              {(item.label || item.subtitle) && (
+                <Tooltip direction="top" sticky>
+                  {item.label && <div><strong>{item.label}</strong></div>}
+                  {item.subtitle && <div>{item.subtitle}</div>}
+                </Tooltip>
+              )}
+            </Polyline>
+          </>
         );
       })}
     </MapContainer>
