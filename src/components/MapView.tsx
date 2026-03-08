@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import type { LineStringGeoJson } from '../types';
@@ -73,11 +73,14 @@ function ViewController({
   defaultZoom: number;
 }) {
   const map = useMap();
+  const appliedFitTokenRef = useRef(0);
+  const appliedResetTokenRef = useRef(0);
 
   useEffect(() => {
-    if (fitBoundsToken <= 0) {
+    if (fitBoundsToken <= 0 || fitBoundsToken === appliedFitTokenRef.current) {
       return;
     }
+    appliedFitTokenRef.current = fitBoundsToken;
 
     const bounds = L.latLngBounds([]);
     for (const point of toLatLngs(route)) {
@@ -95,9 +98,10 @@ function ViewController({
   }, [fitBoundsToken, map, overlays, route]);
 
   useEffect(() => {
-    if (resetViewToken <= 0) {
+    if (resetViewToken <= 0 || resetViewToken === appliedResetTokenRef.current) {
       return;
     }
+    appliedResetTokenRef.current = resetViewToken;
     map.setView(defaultCenter, defaultZoom);
   }, [defaultCenter, defaultZoom, map, resetViewToken]);
 
