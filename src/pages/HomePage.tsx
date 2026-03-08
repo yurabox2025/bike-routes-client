@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
 import type { RouteItem, User } from '../types';
-import { formatDate } from '../utils';
+import { formatDate, formatDistanceMeters, lineDistanceMeters } from '../utils';
 
 function sanitizeFilenamePart(name: string): string {
   return name
@@ -79,6 +79,16 @@ export function HomePage() {
     }
   };
 
+  const sortedRoutes = useMemo(
+    () =>
+      [...routes].sort((a, b) => {
+        const aTs = new Date(a.createdAt).getTime();
+        const bTs = new Date(b.createdAt).getTime();
+        return bTs - aTs;
+      }),
+    [routes]
+  );
+
   return (
     <div className="container page-wrap py-4">
       <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
@@ -97,16 +107,17 @@ export function HomePage() {
                   <span>Загрузка маршрутов...</span>
                 </div>
               )}
-              {!isLoading && routes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет.</p>}
-              {!isLoading && routes.length > 0 && (
+              {!isLoading && sortedRoutes.length === 0 && <p className="text-muted mb-0">Маршрутов пока нет.</p>}
+              {!isLoading && sortedRoutes.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
-                  {routes.map((route) => (
+                  {sortedRoutes.map((route) => (
                     <li key={route.id} className="border rounded p-3 d-flex flex-column gap-3 bg-white">
                       <div className="d-flex align-items-center justify-content-between gap-2">
                         <div className="d-flex flex-column">
                           <Link to={`/routes/${route.id}`}>{route.name}</Link>
                           <small className="text-muted">
-                            {formatDate(route.createdAt)} · {route.visibility === 'private' ? 'Приватный' : 'Публичный'}
+                            {formatDate(route.createdAt)} · {route.visibility === 'private' ? 'Приватный' : 'Публичный'} ·{' '}
+                            {formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))}
                           </small>
                           <small className="text-muted">Загрузил: {users.find((candidate) => candidate.id === route.createdBy)?.name ?? 'Unknown'}</small>
                         </div>
