@@ -112,6 +112,90 @@ body {
   font-weight: 600;
 }
 
+.map-legend-list {
+  display: block;
+}
+
+.map-legend,
+.map-mini-list {
+  border: 1px solid #dee2e6;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  max-height: 220px;
+  overflow: auto;
+  background: #fff;
+}
+
+.map-legend-item,
+.map-mini-item {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: 0.4rem;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.map-legend-item:hover,
+.map-mini-item:hover {
+  background: #f8f9fa;
+}
+
+.map-legend-item.active,
+.map-mini-item.active {
+  border-color: #0d6efd;
+  background: #eef5ff;
+}
+
+.map-legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.map-legend-name {
+  vertical-align: middle;
+}
+
+.map-mini-title {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #212529;
+  gap: 0.35rem;
+}
+
+.map-mini-meta {
+  display: block;
+  font-size: 0.82rem;
+  color: #6c757d;
+}
+
+.map-mobile-panel-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.32);
+  z-index: 1050;
+}
+
+.map-mobile-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 70vh;
+  overflow: auto;
+  background: #fff;
+  border-top-left-radius: 1rem;
+  border-top-right-radius: 1rem;
+  padding: 0.85rem 1rem 1rem;
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15);
+}
+
 @media (max-width: 767.98px) {
   .with-fixed-header {
     padding-top: 68px;
@@ -167,5 +251,34 @@ body {
     min-width: 108px;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
+  }
+
+  .map-filter-row {
+    width: 100%;
+    display: grid !important;
+    grid-template-columns: 1fr;
+    gap: 0.5rem !important;
+    align-items: stretch !important;
+  }
+
+  .map-filter-row .btn-group {
+    width: 100%;
+  }
+
+  .map-filter-row .btn-group .btn {
+    flex: 1 1 50%;
+    white-space: nowrap;
+  }
+
+  .map-filter-row .badge {
+    justify-self: start;
+  }
+
+  .map-controls-wrap > .btn-outline-dark {
+    width: 100%;
+  }
+
+  .map-back-btn {
+    width: 100%;
   }
 }

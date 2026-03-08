@@ -1,18 +1,29 @@
-import { useEffect } from 'react';
-import { MapContainer, Polyline, TileLayer, useMap } from 'react-leaflet';
+import { useEffect, useMemo, useState } from 'react';
+import { MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 import type { LineStringGeoJson } from '../types';
 import 'leaflet/dist/leaflet.css';
 
 interface Overlay {
   id: string;
   line: LineStringGeoJson;
+  label?: string;
+  subtitle?: string;
   color?: string;
+  weight?: number;
+  opacity?: number;
+  selected?: boolean;
 }
 
 interface Props {
   route?: LineStringGeoJson;
   overlays?: Overlay[];
   height?: number;
+  onOverlaySelect?: (overlayId: string) => void;
+  fitBoundsToken?: number;
+  resetViewToken?: number;
+  defaultCenter?: [number, number];
+  defaultZoom?: number;
 }
 
 function toLatLngs(line?: LineStringGeoJson): [number, number][] {
@@ -32,25 +43,157 @@ function AttributionPrefix() {
   return null;
 }
 
-export function MapView({ route, overlays = [], height = 420 }: Props) {
+function MapZoomTracker({ onZoom }: { onZoom: (zoom: number) => void }) {
+  const map = useMapEvents({
+    zoomend: () => {
+      onZoom(map.getZoom());
+    }
+  });
+
+  useEffect(() => {
+    onZoom(map.getZoom());
+  }, [map, onZoom]);
+
+  return null;
+}
+
+function ViewController({
+  route,
+  overlays,
+  fitBoundsToken,
+  resetViewToken,
+  defaultCenter,
+  defaultZoom
+}: {
+  route?: LineStringGeoJson;
+  overlays: Overlay[];
+  fitBoundsToken: number;
+  resetViewToken: number;
+  defaultCenter: [number, number];
+  defaultZoom: number;
+}) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (fitBoundsToken <= 0) {
+      return;
+    }
+
+    const bounds = L.latLngBounds([]);
+    for (const point of toLatLngs(route)) {
+      bounds.extend(point);
+    }
+    for (const overlay of overlays) {
+      for (const point of toLatLngs(overlay.line)) {
+        bounds.extend(point);
+      }
+    }
+
+    if (bounds.isValid()) {
+      map.fitBounds(bounds, { padding: [24, 24] });
+    }
+  }, [fitBoundsToken, map, overlays, route]);
+
+  useEffect(() => {
+    if (resetViewToken <= 0) {
+      return;
+    }
+    map.setView(defaultCenter, defaultZoom);
+  }, [defaultCenter, defaultZoom, map, resetViewToken]);
+
+  return null;
+}
+
+function simplifyByZoom(latLngs: [number, number][], zoom: number): [number, number][] {
+  if (latLngs.length < 3) {
+    return latLngs;
+  }
+
+  let stride = 1;
+  if (zoom < 8) {
+    stride = 10;
+  } else if (zoom < 10) {
+    stride = 6;
+  } else if (zoom < 12) {
+    stride = 3;
+  }
+
+  if (stride === 1) {
+    return latLngs;
+  }
+
+  const simplified: [number, number][] = [latLngs[0]];
+  for (let index = stride; index < latLngs.length - 1; index += stride) {
+    simplified.push(latLngs[index]);
+  }
+  simplified.push(latLngs[latLngs.length - 1]);
+  return simplified;
+}
+
+export function MapView({
+  route,
+  overlays = [],
+  height = 420,
+  onOverlaySelect,
+  fitBoundsToken = 0,
+  resetViewToken = 0,
+  defaultCenter = [55.751244, 37.618423],
+  defaultZoom = 10
+}: Props) {
   const routeLatLngs = toLatLngs(route);
   const firstOverlayLatLngs = overlays.length > 0 ? toLatLngs(overlays[0].line) : [];
-  const center = routeLatLngs[0] ?? firstOverlayLatLngs[0] ?? [55.751244, 37.618423];
+  const center = routeLatLngs[0] ?? firstOverlayLatLngs[0] ?? defaultCenter;
+  const [zoom, setZoom] = useState(defaultZoom);
+
+  const preparedOverlays = useMemo(
+    () =>
+      overlays.map((item) => ({
+        ...item,
+        latLngs: simplifyByZoom(toLatLngs(item.line), zoom)
+      })),
+    [overlays, zoom]
+  );
 
   return (
-    <MapContainer center={center} zoom={10} style={{ height: `${height}px`, width: '100%' }}>
+    <MapContainer center={center} zoom={defaultZoom} style={{ height: `${height}px`, width: '100%' }}>
       <AttributionPrefix />
+      <MapZoomTracker onZoom={setZoom} />
+      <ViewController
+        route={route}
+        overlays={overlays}
+        fitBoundsToken={fitBoundsToken}
+        resetViewToken={resetViewToken}
+        defaultCenter={defaultCenter}
+        defaultZoom={defaultZoom}
+      />
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       {routeLatLngs.length > 1 && <Polyline positions={routeLatLngs} color="#2f6fed" weight={5} />}
-      {overlays.map((item) => {
-        const overlayLatLngs = toLatLngs(item.line);
-        if (overlayLatLngs.length < 2) {
+      {preparedOverlays.map((item) => {
+        if (item.latLngs.length < 2) {
           return null;
         }
-        return <Polyline key={item.id} positions={overlayLatLngs} color={item.color ?? '#e95157'} weight={3} opacity={0.8} />;
+        return (
+          <Polyline
+            key={item.id}
+            positions={item.latLngs}
+            color={item.color ?? '#e95157'}
+            weight={item.weight ?? (item.selected ? 5 : 3)}
+            opacity={item.opacity ?? (item.selected ? 1 : 0.7)}
+            eventHandlers={{
+              click: () => onOverlaySelect?.(item.id)
+            }}
+          >
+            {(item.label || item.subtitle) && (
+              <Tooltip direction="top" sticky>
+                {item.label && <div><strong>{item.label}</strong></div>}
+                {item.subtitle && <div>{item.subtitle}</div>}
+              </Tooltip>
+            )}
+          </Polyline>
+        );
       })}
     </MapContainer>
   );
