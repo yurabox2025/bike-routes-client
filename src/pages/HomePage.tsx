@@ -18,6 +18,7 @@ export function HomePage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [downloadingRouteId, setDownloadingRouteId] = useState<string | null>(null);
+  const [deletingRouteId, setDeletingRouteId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
@@ -48,10 +49,13 @@ export function HomePage() {
     }
 
     try {
+      setDeletingRouteId(routeId);
       await apiFetch<{ ok: boolean }>(`/api/routes/${routeId}`, { method: 'DELETE' });
       await loadData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete route');
+    } finally {
+      setDeletingRouteId(null);
     }
   };
 
@@ -109,15 +113,20 @@ export function HomePage() {
                         <div className="d-flex align-items-center gap-2">
                           <button
                             type="button"
-                            className="btn btn-sm btn-outline-secondary"
+                            className="btn btn-sm btn-outline-secondary route-download-btn"
                             disabled={downloadingRouteId === route.id}
                             onClick={() => void downloadRoute(route.id, route.name)}
                           >
                             {downloadingRouteId === route.id ? 'Скачиваем...' : 'Скачать GPX'}
                           </button>
                           {user && (user.role === 'admin' || user.id === route.createdBy) && (
-                            <button type="button" className="btn btn-sm btn-outline-danger" onClick={() => void deleteRoute(route.id)}>
-                              Удалить
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              disabled={deletingRouteId === route.id}
+                              onClick={() => void deleteRoute(route.id)}
+                            >
+                              {deletingRouteId === route.id ? 'Удаляем...' : 'Удалить'}
                             </button>
                           )}
                         </div>

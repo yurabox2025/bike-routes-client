@@ -106,6 +106,12 @@ body {
   gap: 0.75rem 1rem;
 }
 
+.route-download-btn {
+  white-space: nowrap;
+  min-width: 118px;
+  font-weight: 600;
+}
+
 @media (max-width: 767.98px) {
   .with-fixed-header {
     padding-top: 68px;
@@ -155,5 +161,11 @@ body {
 
   .route-manage-grid {
     grid-template-columns: 1fr;
+  }
+
+  .route-download-btn {
+    min-width: 108px;
+    padding-left: 0.6rem;
+    padding-right: 0.6rem;
   }
 }
