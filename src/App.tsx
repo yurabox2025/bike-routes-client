@@ -68,7 +68,7 @@ function AppShell() {
 
           {menuOpen && (
             <div className="mobile-nav-menu d-md-none">
-              <div className="container page-wrap py-2 d-grid gap-1">
+              <div className="px-3 py-2 d-grid gap-1">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.to}
