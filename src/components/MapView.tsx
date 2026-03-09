@@ -219,7 +219,12 @@ export function MapView({
               lineCap="round"
               lineJoin="round"
               eventHandlers={{
-                click: () => onOverlaySelect?.(item.id)
+                click: () => {
+                  onOverlaySelect?.(item.id);
+                  if (isMobile && onOverlayLabelClick) {
+                    onOverlayLabelClick(item.id);
+                  }
+                }
               }}
             >
               {(item.label || item.subtitle) && (
