@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import { Fragment } from 'react';
 import type { LineStringGeoJson } from '../types';
 import 'leaflet/dist/leaflet.css';
 
@@ -9,6 +10,8 @@ interface Overlay {
   line: LineStringGeoJson;
   label?: string;
   subtitle?: string;
+  mobileSubtitle?: string;
+  tooltipLines?: string[];
   color?: string;
   weight?: number;
   opacity?: number;
@@ -148,6 +151,19 @@ export function MapView({
   const firstOverlayLatLngs = overlays.length > 0 ? toLatLngs(overlays[0].line) : [];
   const center = routeLatLngs[0] ?? firstOverlayLatLngs[0] ?? defaultCenter;
   const [zoom, setZoom] = useState(defaultZoom);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth <= 767 : false));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const media = window.matchMedia('(max-width: 767.98px)');
+    const onChange = () => setIsMobile(media.matches);
+    onChange();
+    media.addEventListener('change', onChange);
+    return () => media.removeEventListener('change', onChange);
+  }, []);
 
   const preparedOverlays = useMemo(
     () =>
@@ -182,7 +198,7 @@ export function MapView({
         const baseWeight = item.weight ?? (item.selected ? 5 : 3);
         const baseOpacity = item.opacity ?? (item.selected ? 1 : 0.7);
         return (
-          <>
+          <Fragment key={`${item.id}-group`}>
             <Polyline
               key={`${item.id}-halo`}
               positions={item.latLngs}
@@ -207,11 +223,17 @@ export function MapView({
               {(item.label || item.subtitle) && (
                 <Tooltip direction="top" sticky>
                   {item.label && <div><strong>{item.label}</strong></div>}
-                  {item.subtitle && <div>{item.subtitle}</div>}
+                  {(isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle) && (
+                    <div>{isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle}</div>
+                  )}
+                  {!isMobile &&
+                    item.tooltipLines?.map((line) => (
+                      <div key={`${item.id}-${line}`}>{line}</div>
+                    ))}
                 </Tooltip>
               )}
             </Polyline>
-          </>
+          </Fragment>
         );
       })}
     </MapContainer>

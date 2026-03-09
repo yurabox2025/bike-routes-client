@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
 import type { RouteItem, User } from '../types';
-import { formatDate, formatDistanceMeters, lineDistanceMeters } from '../utils';
+import { formatDate, formatDistanceMeters, formatElevationMeters, lineDistanceMeters } from '../utils';
 
 function sanitizeFilenamePart(name: string): string {
   return name
@@ -118,6 +118,9 @@ export function HomePage() {
                           <small className="text-muted">
                             {formatDate(route.createdAt)} · {route.visibility === 'private' ? 'Приватный' : 'Публичный'} ·{' '}
                             {formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))}
+                          </small>
+                          <small className="text-muted">
+                            Набор: {formatElevationMeters(route.elevationGainMeters)} · Сброс: {formatElevationMeters(route.elevationLossMeters)}
                           </small>
                           <small className="text-muted">Загрузил: {users.find((candidate) => candidate.id === route.createdBy)?.name ?? 'Unknown'}</small>
                         </div>

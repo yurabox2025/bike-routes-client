@@ -17,6 +17,8 @@ export interface RouteItem {
   createdBy: string;
   visibility: 'public' | 'private';
   rating?: number | null;
+  elevationGainMeters?: number;
+  elevationLossMeters?: number;
   participantUserIds?: string[];
   gpxStorage?: {
     provider: 'yadisk' | 'local';

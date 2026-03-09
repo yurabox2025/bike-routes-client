@@ -14,6 +14,13 @@ export function formatDistanceMeters(value: number): string {
   return `${(value / 1000).toFixed(2)} km`;
 }
 
+export function formatElevationMeters(value?: number): string {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return '0 m';
+  }
+  return `${Math.round(value)} m`;
+}
+
 export function lineDistanceMeters(coords: [number, number][]): number {
   if (coords.length < 2) {
     return 0;

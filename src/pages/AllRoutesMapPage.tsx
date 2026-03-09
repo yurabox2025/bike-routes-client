@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
 import type { RouteItem, User } from '../types';
-import { formatDate, formatDistanceMeters, lineDistanceMeters } from '../utils';
+import { formatDate, formatDistanceMeters, formatElevationMeters, lineDistanceMeters } from '../utils';
 
 type MapScope = 'public' | 'private';
 
@@ -66,12 +66,19 @@ export function AllRoutesMapPage() {
         ? sortedRoutes.map((route) => {
             const creatorName = users.find((user) => user.id === route.createdBy)?.name ?? 'Unknown';
             const overlayId = `route-${route.id}`;
+            const mobileDate = new Date(route.createdAt).toLocaleDateString();
             return {
               id: overlayId,
               line: route.routeLineGeoJson,
               color: routeColorById(route.id),
               label: route.name,
+              mobileSubtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · Набор ${formatElevationMeters(route.elevationGainMeters)} · ${mobileDate}`,
               subtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · ${formatDate(route.createdAt)} · ${creatorName}`,
+              tooltipLines: [
+                `Видимость: ${route.visibility === 'private' ? 'Приватный' : 'Публичный'}`,
+                `Рейтинг: ${route.rating ? `${route.rating}/10` : 'не задан'}`,
+                `Набор: ${formatElevationMeters(route.elevationGainMeters)} · Сброс: ${formatElevationMeters(route.elevationLossMeters)}`
+              ],
               selected: selectedRouteId === route.id,
               weight: selectedRouteId === route.id ? 6 : 3,
               opacity: selectedRouteId === route.id ? 1 : 0.55

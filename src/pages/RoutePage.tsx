@@ -4,7 +4,7 @@ import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
 import { MapView } from '../components/MapView';
 import type { RouteItem, User } from '../types';
-import { formatDate } from '../utils';
+import { formatDate, formatElevationMeters } from '../utils';
 
 function getSelectedValues(select: HTMLSelectElement): string[] {
   return Array.from(select.selectedOptions).map((option) => option.value);
@@ -188,6 +188,8 @@ export function RoutePage() {
             <span className="route-meta-pill">Создан: {formatDate(route.createdAt)}</span>
             <span className="route-meta-pill">Кто создал: {creatorName}</span>
             <span className="route-meta-pill">Рейтинг: {route.rating ? `${route.rating}/10` : 'не задан'}</span>
+            <span className="route-meta-pill">Набор: {formatElevationMeters(route.elevationGainMeters)}</span>
+            <span className="route-meta-pill">Сброс: {formatElevationMeters(route.elevationLossMeters)}</span>
             <span className="route-meta-pill">Участников: {participantNames.length}</span>
           </div>
         </div>
