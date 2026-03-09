@@ -112,6 +112,14 @@ body {
   font-weight: 600;
 }
 
+.route-item-row {
+  width: 100%;
+}
+
+.route-item-actions {
+  flex-shrink: 0;
+}
+
 .map-legend-list {
   display: block;
 }
@@ -267,6 +275,22 @@ body {
     min-width: 108px;
     padding-left: 0.6rem;
     padding-right: 0.6rem;
+  }
+
+  .route-item-row {
+    align-items: stretch !important;
+    flex-direction: column;
+    gap: 0.75rem !important;
+  }
+
+  .route-item-actions {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.15rem;
+  }
+
+  .route-item-actions .btn {
+    min-width: 0;
   }
 
   .map-filter-row {

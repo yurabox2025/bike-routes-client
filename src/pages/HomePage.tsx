@@ -111,8 +111,8 @@ export function HomePage() {
               {!isLoading && sortedRoutes.length > 0 && (
                 <ul className="mb-0 list-unstyled d-flex flex-column gap-2">
                   {sortedRoutes.map((route) => (
-                    <li key={route.id} className="border rounded p-3 d-flex flex-column gap-3 bg-white">
-                      <div className="d-flex align-items-center justify-content-between gap-2">
+                    <li key={route.id} className="border rounded p-3 d-flex flex-column gap-3 bg-white route-item-card">
+                      <div className="d-flex align-items-center justify-content-between gap-2 route-item-row">
                         <div className="d-flex flex-column">
                           <Link to={`/routes/${route.id}`}>{route.name}</Link>
                           <small className="text-muted">
@@ -121,7 +121,7 @@ export function HomePage() {
                           </small>
                           <small className="text-muted">Загрузил: {users.find((candidate) => candidate.id === route.createdBy)?.name ?? 'Unknown'}</small>
                         </div>
-                        <div className="d-flex align-items-center gap-2">
+                        <div className="d-flex align-items-center gap-2 route-item-actions">
                           <button
                             type="button"
                             className="btn btn-sm btn-outline-secondary route-download-btn"
