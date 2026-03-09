@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
 import type { RouteItem, User } from '../types';
@@ -18,6 +18,7 @@ function routeColorById(routeId: string): string {
 }
 
 export function AllRoutesMapPage() {
+  const navigate = useNavigate();
   const [scope, setScope] = useState<MapScope>('public');
   const [routes, setRoutes] = useState<RouteItem[]>([]);
   const [users, setUsers] = useState<User[]>([]);
@@ -159,6 +160,7 @@ export function AllRoutesMapPage() {
             overlays={overlays}
             height={620}
             onOverlaySelect={(overlayId) => setSelectedRouteId(overlayId.replace('route-', ''))}
+            onOverlayLabelClick={(overlayId) => navigate(`/routes/${overlayId.replace('route-', '')}`)}
             fitBoundsToken={fitBoundsToken}
             resetViewToken={resetViewToken}
           />

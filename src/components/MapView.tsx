@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { Fragment } from 'react';
 import type { LineStringGeoJson } from '../types';
@@ -23,6 +23,7 @@ interface Props {
   overlays?: Overlay[];
   height?: number;
   onOverlaySelect?: (overlayId: string) => void;
+  onOverlayLabelClick?: (overlayId: string) => void;
   fitBoundsToken?: number;
   resetViewToken?: number;
   defaultCenter?: [number, number];
@@ -142,6 +143,7 @@ export function MapView({
   overlays = [],
   height = 420,
   onOverlaySelect,
+  onOverlayLabelClick,
   fitBoundsToken = 0,
   resetViewToken = 0,
   defaultCenter = [55.751244, 37.618423],
@@ -222,7 +224,11 @@ export function MapView({
             >
               {(item.label || item.subtitle) && (
                 <Tooltip direction="top" sticky>
-                  {item.label && <div><strong>{item.label}</strong></div>}
+                  {item.label && (
+                    <div>
+                      <strong>{item.label}</strong>
+                    </div>
+                  )}
                   {(isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle) && (
                     <div>{isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle}</div>
                   )}
@@ -231,6 +237,32 @@ export function MapView({
                       <div key={`${item.id}-${line}`}>{line}</div>
                     ))}
                 </Tooltip>
+              )}
+              {onOverlayLabelClick && (item.label || item.subtitle) && (
+                <Popup autoPan closeButton>
+                  {item.label && (
+                    <div>
+                      <button
+                        type="button"
+                        className="btn btn-link p-0 fw-semibold align-baseline"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          onOverlayLabelClick(item.id);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    </div>
+                  )}
+                  {(isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle) && (
+                    <div>{isMobile ? item.mobileSubtitle ?? item.subtitle : item.subtitle}</div>
+                  )}
+                  {!isMobile &&
+                    item.tooltipLines?.map((line) => (
+                      <div key={`${item.id}-popup-${line}`}>{line}</div>
+                    ))}
+                </Popup>
               )}
             </Polyline>
           </Fragment>
