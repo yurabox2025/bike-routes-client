@@ -50,3 +50,23 @@ export interface RouteCompletion {
   userName: string;
   startedAt: string;
 }
+
+export interface RouteProfileSample {
+  distanceMeters: number;
+  elevationMeters: number | null;
+  slopePercent: number | null;
+  slopeDegrees: number | null;
+  time?: string;
+}
+
+export interface RouteProfile {
+  samples: RouteProfileSample[];
+  totalDistanceMeters: number;
+  elevationGainMeters: number;
+  elevationLossMeters: number;
+  maxSlopeUpPercent: number | null;
+  maxSlopeDownPercent: number | null;
+  startedAt?: string;
+  finishedAt?: string;
+  durationSeconds?: number;
+}

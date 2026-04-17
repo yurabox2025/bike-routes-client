@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
+import { ElevationProfile } from '../components/ElevationProfile';
 import { MapView } from '../components/MapView';
-import type { RouteItem, User } from '../types';
-import { formatDate, formatElevationMeters } from '../utils';
+import type { RouteItem, RouteProfile, User } from '../types';
+import { formatDate, formatDistanceMeters, formatDurationSeconds, formatElevationMeters } from '../utils';
 
 function getSelectedValues(select: HTMLSelectElement): string[] {
   return Array.from(select.selectedOptions).map((option) => option.value);
@@ -29,6 +30,9 @@ export function RoutePage() {
   const [downloading, setDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [participantDraftIds, setParticipantDraftIds] = useState<string[]>([]);
+  const [profile, setProfile] = useState<RouteProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
@@ -37,6 +41,9 @@ export function RoutePage() {
     }
 
     try {
+      setProfileLoading(true);
+      setProfileError(null);
+
       const [routeRes, usersRes] = await Promise.all([
         apiFetch<{ route: RouteItem }>(`/api/routes/${id}`),
         apiFetch<{ users: User[] }>('/api/users')
@@ -44,8 +51,19 @@ export function RoutePage() {
       setRoute(routeRes.route);
       setUsers(usersRes.users);
       setParticipantDraftIds(routeRes.route.participantUserIds ?? [routeRes.route.createdBy]);
+
+      try {
+        const profileRes = await apiFetch<{ profile: RouteProfile }>(`/api/routes/${id}/profile`);
+        setProfile(profileRes.profile);
+      } catch (profileLoadError) {
+        setProfile(null);
+        setProfileError(profileLoadError instanceof Error ? profileLoadError.message : 'Не удалось загрузить профиль высоты');
+      } finally {
+        setProfileLoading(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load route');
+      setProfileLoading(false);
     }
   }, [id]);
 
@@ -165,6 +183,17 @@ export function RoutePage() {
   const creatorName = users.find((candidate) => candidate.id === route.createdBy)?.name ?? 'Unknown';
 
   const canManage = Boolean(user && (route.createdBy === user.id || user.role === 'admin'));
+  const avgSpeedKmh =
+    profile && profile.durationSeconds && profile.durationSeconds > 0
+      ? (profile.totalDistanceMeters / 1000 / (profile.durationSeconds / 3600)).toFixed(2)
+      : null;
+
+  const formatSlopePercent = (value: number | null): string => {
+    if (typeof value !== 'number') {
+      return '—';
+    }
+    return `${value.toFixed(1)}%`;
+  };
 
   return (
     <div className="container page-wrap py-4">
@@ -199,6 +228,63 @@ export function RoutePage() {
         <div className="card-body">
           <h2 className="h5 m-0 mb-3">Карта</h2>
           <MapView route={route.routeLineGeoJson} />
+        </div>
+      </section>
+
+      <section className="card mb-3">
+        <div className="card-body">
+          <h2 className="h5 m-0 mb-3">Профиль высоты</h2>
+
+          {profileLoading && (
+            <div className="d-flex align-items-center gap-2 text-muted">
+              <div className="spinner-border spinner-border-sm" role="status" aria-hidden="true" />
+              <span>Строим профиль маршрута...</span>
+            </div>
+          )}
+
+          {!profileLoading && profile && (
+            <div className="route-profile-layout">
+              <div className="route-profile-stats">
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Дистанция</span>
+                  <strong>{formatDistanceMeters(profile.totalDistanceMeters)}</strong>
+                </div>
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Набор / Сброс</span>
+                  <strong>
+                    {formatElevationMeters(profile.elevationGainMeters)} / {formatElevationMeters(profile.elevationLossMeters)}
+                  </strong>
+                </div>
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Макс. уклон</span>
+                  <strong>
+                    ↗ {formatSlopePercent(profile.maxSlopeUpPercent)} · ↘{' '}
+                    {formatSlopePercent(profile.maxSlopeDownPercent !== null ? Math.abs(profile.maxSlopeDownPercent) : null)}
+                  </strong>
+                </div>
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Время в пути</span>
+                  <strong>{formatDurationSeconds(profile.durationSeconds)}</strong>
+                </div>
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Средняя скорость</span>
+                  <strong>{avgSpeedKmh ? `${avgSpeedKmh} км/ч` : '—'}</strong>
+                </div>
+                <div className="route-profile-stat-item">
+                  <span className="route-profile-stat-label">Старт / Финиш</span>
+                  <strong>
+                    {profile.startedAt ? formatDate(profile.startedAt) : '—'}
+                    {' / '}
+                    {profile.finishedAt ? formatDate(profile.finishedAt) : '—'}
+                  </strong>
+                </div>
+              </div>
+
+              <ElevationProfile profile={profile} />
+            </div>
+          )}
+
+          {!profileLoading && !profile && <p className="text-muted mb-0">{profileError ?? 'Профиль высоты недоступен для этого маршрута.'}</p>}
         </div>
       </section>
 

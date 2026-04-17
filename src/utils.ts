@@ -14,6 +14,21 @@ export function formatDistanceMeters(value: number): string {
   return `${(value / 1000).toFixed(2)} km`;
 }
 
+export function formatDurationSeconds(value?: number): string {
+  if (!value || value <= 0) {
+    return '—';
+  }
+  const total = Math.floor(value);
+  const hours = Math.floor(total / 3600)
+    .toString()
+    .padStart(2, '0');
+  const minutes = Math.floor((total % 3600) / 60)
+    .toString()
+    .padStart(2, '0');
+  const seconds = (total % 60).toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+}
+
 export function formatElevationMeters(value?: number): string {
   if (typeof value !== 'number' || Number.isNaN(value)) {
     return '0 m';
