@@ -359,18 +359,22 @@ export function RoutePage() {
               </div>
               <div>
                 <label className="form-label">Цвет</label>
-                <select
-                  className="form-select form-select-sm"
-                  value={route.color ?? ROUTE_COLORS[0]}
-                  disabled={colorSaving}
-                  onChange={(event) => void updateColor(event.target.value as RouteColor)}
-                >
+                <div className="route-color-picker route-color-picker-sm" role="radiogroup" aria-label="Цвет маршрута">
                   {ROUTE_COLORS.map((color) => (
-                    <option key={color} value={color}>
-                      {color}
-                    </option>
+                    <button
+                      key={color}
+                      type="button"
+                      className={`route-color-swatch ${(route.color ?? ROUTE_COLORS[0]) === color ? 'active' : ''}`}
+                      style={{ backgroundColor: color }}
+                      aria-label={`Выбрать цвет ${color}`}
+                      aria-checked={(route.color ?? ROUTE_COLORS[0]) === color}
+                      role="radio"
+                      disabled={colorSaving}
+                      onClick={() => void updateColor(color as RouteColor)}
+                    />
                   ))}
-                </select>
+                </div>
+                <div className="form-text">Значение цвета: {route.color ?? ROUTE_COLORS[0]}</div>
               </div>
             </div>
             <div className="d-flex flex-column gap-2">

@@ -106,6 +106,40 @@ body {
   gap: 0.75rem 1rem;
 }
 
+.route-color-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.route-color-swatch {
+  width: 44px;
+  height: 24px;
+  border: 1px solid #adb5bd;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+}
+
+.route-color-swatch:hover {
+  transform: translateY(-1px);
+}
+
+.route-color-swatch.active {
+  border-color: #212529;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.28);
+}
+
+.route-color-swatch:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.route-color-picker-sm .route-color-swatch {
+  width: 40px;
+  height: 22px;
+}
+
 .route-download-btn {
   white-space: nowrap;
   min-width: 118px;

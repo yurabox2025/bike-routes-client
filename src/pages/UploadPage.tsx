@@ -162,13 +162,21 @@ export function UploadPage() {
           </div>
           <div className="mb-3">
             <label className="form-label">Цвет маршрута</label>
-            <select className="form-select" value={routeColor} onChange={(e) => setRouteColor(e.target.value as RouteColor)}>
+            <div className="route-color-picker" role="radiogroup" aria-label="Цвет маршрута">
               {ROUTE_COLORS.map((color) => (
-                <option key={color} value={color}>
-                  {color}
-                </option>
+                <button
+                  key={color}
+                  type="button"
+                  className={`route-color-swatch ${routeColor === color ? 'active' : ''}`}
+                  style={{ backgroundColor: color }}
+                  aria-label={`Выбрать цвет ${color}`}
+                  aria-checked={routeColor === color}
+                  role="radio"
+                  onClick={() => setRouteColor(color)}
+                />
               ))}
-            </select>
+            </div>
+            <div className="form-text">Значение цвета: {routeColor}</div>
           </div>
           <div className="mb-3">
             <label className="form-label">GPX файл прохождения</label>
