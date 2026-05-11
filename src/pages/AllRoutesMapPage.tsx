@@ -8,6 +8,14 @@ import { formatDate, formatDistanceMeters, formatElevationMeters, lineDistanceMe
 
 type MapScope = 'public' | 'private';
 
+function routeColorById(routeId: string): string {
+  let hash = 0;
+  for (let index = 0; index < routeId.length; index += 1) {
+    hash = (hash * 31 + routeId.charCodeAt(index)) >>> 0;
+  }
+  return ROUTE_COLORS[hash % ROUTE_COLORS.length];
+}
+
 export function AllRoutesMapPage() {
   const navigate = useNavigate();
   const [scope, setScope] = useState<MapScope>('public');
@@ -62,7 +70,7 @@ export function AllRoutesMapPage() {
             return {
               id: overlayId,
               line: route.routeLineGeoJson,
-              color: route.color && isRouteColor(route.color) ? route.color : ROUTE_COLORS[0],
+              color: route.color && isRouteColor(route.color) ? route.color : routeColorById(route.id),
               label: route.name,
               mobileSubtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · Набор ${formatElevationMeters(route.elevationGainMeters)} · ${mobileDate}`,
               subtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · ${formatDate(route.createdAt)} · ${creatorName}`,
