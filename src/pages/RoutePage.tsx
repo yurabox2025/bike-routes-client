@@ -52,7 +52,7 @@ export function RoutePage() {
       ]);
       setRoute(routeRes.route);
       setUsers(usersRes.users);
-      setParticipantDraftIds(routeRes.route.participantUserIds ?? [routeRes.route.createdBy]);
+      setParticipantDraftIds(routeRes.route.participantUserIds ?? []);
 
       try {
         const profileRes = await apiFetch<{ profile: RouteProfile }>(`/api/routes/${id}/profile`);
@@ -165,7 +165,7 @@ export function RoutePage() {
         body: JSON.stringify({ userIds: participantDraftIds })
       });
       setRoute(response.route);
-      setParticipantDraftIds(response.route.participantUserIds ?? [response.route.createdBy]);
+      setParticipantDraftIds(response.route.participantUserIds ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update route users');
     } finally {
@@ -392,7 +392,7 @@ export function RoutePage() {
                   </option>
                 ))}
               </select>
-              <div className="form-text">Можно выбрать несколько пользователей. Автор маршрута добавляется автоматически.</div>
+              <div className="form-text">Можно выбрать несколько пользователей, включая пустой список.</div>
               <div className="d-flex justify-content-start">
                 <button type="button" className="btn btn-primary" disabled={participantsSaving} onClick={() => void saveParticipants()}>
                   {participantsSaving ? 'Сохраняем...' : 'Сохранить участников'}
