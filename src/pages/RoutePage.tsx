@@ -4,6 +4,7 @@ import { apiFetch, apiFetchBlob } from '../api';
 import { useAuth } from '../auth';
 import { ElevationProfile } from '../components/ElevationProfile';
 import { MapView } from '../components/MapView';
+import { ROUTE_COLORS, type RouteColor } from '../routeColors';
 import type { RouteItem, RouteProfile, User } from '../types';
 import { formatDate, formatDistanceMeters, formatDurationSeconds, formatElevationMeters } from '../utils';
 
@@ -27,6 +28,7 @@ export function RoutePage() {
   const [visibilitySaving, setVisibilitySaving] = useState(false);
   const [ratingSaving, setRatingSaving] = useState(false);
   const [participantsSaving, setParticipantsSaving] = useState(false);
+  const [colorSaving, setColorSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [participantDraftIds, setParticipantDraftIds] = useState<string[]>([]);
@@ -132,6 +134,25 @@ export function RoutePage() {
     }
   };
 
+  const updateColor = async (color: RouteColor) => {
+    if (!route) {
+      return;
+    }
+
+    try {
+      setColorSaving(true);
+      const response = await apiFetch<{ route: RouteItem }>(`/api/routes/${route.id}/color`, {
+        method: 'PATCH',
+        body: JSON.stringify({ color })
+      });
+      setRoute(response.route);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update route color');
+    } finally {
+      setColorSaving(false);
+    }
+  };
+
   const saveParticipants = async () => {
     if (!route) {
       return;
@@ -227,7 +248,7 @@ export function RoutePage() {
       <section className="card mb-3">
         <div className="card-body">
           <h2 className="h5 m-0 mb-3">Карта</h2>
-          <MapView route={route.routeLineGeoJson} />
+          <MapView route={route.routeLineGeoJson} routeColor={route.color ?? ROUTE_COLORS[0]} />
         </div>
       </section>
 
@@ -332,6 +353,21 @@ export function RoutePage() {
                   {Array.from({ length: 10 }, (_, index) => (
                     <option key={index + 1} value={index + 1}>
                       {index + 1}/10
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="form-label">Цвет</label>
+                <select
+                  className="form-select form-select-sm"
+                  value={route.color ?? ROUTE_COLORS[0]}
+                  disabled={colorSaving}
+                  onChange={(event) => void updateColor(event.target.value as RouteColor)}
+                >
+                  {ROUTE_COLORS.map((color) => (
+                    <option key={color} value={color}>
+                      {color}
                     </option>
                   ))}
                 </select>

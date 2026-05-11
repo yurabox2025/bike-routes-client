@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
+import { isRouteColor, ROUTE_COLORS } from '../routeColors';
 import type { RouteItem, User } from '../types';
 import { formatDate, formatDistanceMeters, formatElevationMeters, lineDistanceMeters } from '../utils';
 
 type MapScope = 'public' | 'private';
-
-const ROUTE_COLORS = ['#ff1744', '#00b0ff', '#00e676', '#ff9100', '#d500f9', '#ffd600', '#00e5ff', '#76ff03', '#ff4081'];
 
 function routeColorById(routeId: string): string {
   let hash = 0;
@@ -71,7 +70,7 @@ export function AllRoutesMapPage() {
             return {
               id: overlayId,
               line: route.routeLineGeoJson,
-              color: routeColorById(route.id),
+              color: route.color && isRouteColor(route.color) ? route.color : routeColorById(route.id),
               label: route.name,
               mobileSubtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · Набор ${formatElevationMeters(route.elevationGainMeters)} · ${mobileDate}`,
               subtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · ${formatDate(route.createdAt)} · ${creatorName}`,

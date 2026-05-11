@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
+import { ROUTE_COLORS, type RouteColor } from '../routeColors';
 import type { LineStringGeoJson, RouteItem, User } from '../types';
 import { parseGpxPreview } from '../utils';
 
@@ -42,6 +43,7 @@ export function UploadPage() {
   const [routeName, setRouteName] = useState('');
   const [routeVisibility, setRouteVisibility] = useState<'private' | 'public'>('private');
   const [routeRating, setRouteRating] = useState(7);
+  const [routeColor, setRouteColor] = useState<RouteColor>(ROUTE_COLORS[0]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const meta = fileMeta(file);
@@ -100,6 +102,7 @@ export function UploadPage() {
     }
     formData.append('routeVisibility', routeVisibility);
     formData.append('routeRating', String(routeRating));
+    formData.append('routeColor', routeColor);
     if (trimMeters > 0) {
       formData.append('trimMeters', String(trimMeters));
     }
@@ -153,6 +156,16 @@ export function UploadPage() {
               {Array.from({ length: 10 }, (_, index) => (
                 <option key={index + 1} value={index + 1}>
                   {index + 1}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="mb-3">
+            <label className="form-label">Цвет маршрута</label>
+            <select className="form-select" value={routeColor} onChange={(e) => setRouteColor(e.target.value as RouteColor)}>
+              {ROUTE_COLORS.map((color) => (
+                <option key={color} value={color}>
+                  {color}
                 </option>
               ))}
             </select>
@@ -214,7 +227,7 @@ export function UploadPage() {
         <section className="card">
           <div className="card-body">
             <h2 className="h5">Предпросмотр прохождения</h2>
-            <MapView route={previewLine} />
+            <MapView route={previewLine} routeColor={routeColor} />
           </div>
         </section>
       )}

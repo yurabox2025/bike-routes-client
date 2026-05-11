@@ -20,6 +20,7 @@ interface Overlay {
 
 interface Props {
   route?: LineStringGeoJson;
+  routeColor?: string;
   overlays?: Overlay[];
   height?: number;
   onOverlaySelect?: (overlayId: string) => void;
@@ -140,6 +141,7 @@ function simplifyByZoom(latLngs: [number, number][], zoom: number): [number, num
 
 export function MapView({
   route,
+  routeColor = '#2f6fed',
   overlays = [],
   height = 420,
   onOverlaySelect,
@@ -192,7 +194,7 @@ export function MapView({
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {routeLatLngs.length > 1 && <Polyline positions={routeLatLngs} color="#2f6fed" weight={5} />}
+      {routeLatLngs.length > 1 && <Polyline positions={routeLatLngs} color={routeColor} weight={5} />}
       {preparedOverlays.map((item) => {
         if (item.latLngs.length < 2) {
           return null;
