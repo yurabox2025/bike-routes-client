@@ -2,19 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { MapView } from '../components/MapView';
-import { isRouteColor, ROUTE_COLORS } from '../routeColors';
+import { ROUTE_COLORS, isRouteColor } from '../routeColors';
 import type { RouteItem, User } from '../types';
 import { formatDate, formatDistanceMeters, formatElevationMeters, lineDistanceMeters } from '../utils';
 
 type MapScope = 'public' | 'private';
-
-function routeColorById(routeId: string): string {
-  let hash = 0;
-  for (let index = 0; index < routeId.length; index += 1) {
-    hash = (hash * 31 + routeId.charCodeAt(index)) >>> 0;
-  }
-  return ROUTE_COLORS[hash % ROUTE_COLORS.length];
-}
 
 export function AllRoutesMapPage() {
   const navigate = useNavigate();
@@ -70,7 +62,7 @@ export function AllRoutesMapPage() {
             return {
               id: overlayId,
               line: route.routeLineGeoJson,
-              color: route.color && isRouteColor(route.color) ? route.color : routeColorById(route.id),
+              color: route.color && isRouteColor(route.color) ? route.color : ROUTE_COLORS[0],
               label: route.name,
               mobileSubtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · Набор ${formatElevationMeters(route.elevationGainMeters)} · ${mobileDate}`,
               subtitle: `${formatDistanceMeters(lineDistanceMeters(route.routeLineGeoJson.coordinates))} · ${formatDate(route.createdAt)} · ${creatorName}`,
