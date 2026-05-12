@@ -26,6 +26,7 @@ export function RoutePage() {
   const [route, setRoute] = useState<RouteItem | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [visibilitySaving, setVisibilitySaving] = useState(false);
+  const [nameSaving, setNameSaving] = useState(false);
   const [ratingSaving, setRatingSaving] = useState(false);
   const [participantsSaving, setParticipantsSaving] = useState(false);
   const [colorSaving, setColorSaving] = useState(false);
@@ -36,6 +37,7 @@ export function RoutePage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nameDraft, setNameDraft] = useState('');
 
   const loadData = useCallback(async () => {
     if (!id) {
@@ -51,6 +53,7 @@ export function RoutePage() {
         apiFetch<{ users: User[] }>('/api/users')
       ]);
       setRoute(routeRes.route);
+      setNameDraft(routeRes.route.name);
       setUsers(usersRes.users);
       setParticipantDraftIds(routeRes.route.participantUserIds ?? []);
 
@@ -89,6 +92,33 @@ export function RoutePage() {
       setError(err instanceof Error ? err.message : 'Failed to update route visibility');
     } finally {
       setVisibilitySaving(false);
+    }
+  };
+
+  const saveName = async () => {
+    if (!route) {
+      return;
+    }
+
+    const nextName = nameDraft.trim();
+    if (!nextName) {
+      setError('Название маршрута не может быть пустым');
+      return;
+    }
+
+    try {
+      setNameSaving(true);
+      setError(null);
+      const response = await apiFetch<{ route: RouteItem }>(`/api/routes/${route.id}/name`, {
+        method: 'PATCH',
+        body: JSON.stringify({ name: nextName })
+      });
+      setRoute(response.route);
+      setNameDraft(response.route.name);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update route name');
+    } finally {
+      setNameSaving(false);
     }
   };
 
@@ -329,6 +359,22 @@ export function RoutePage() {
         <section className="card mb-3">
           <div className="card-body d-flex flex-column gap-3">
             <h2 className="h5 m-0">Управление маршрутом</h2>
+            <div className="d-flex flex-column gap-2">
+              <label className="form-label m-0">Название маршрута</label>
+              <div className="d-flex gap-2">
+                <input
+                  className="form-control form-control-sm"
+                  type="text"
+                  maxLength={120}
+                  value={nameDraft}
+                  onChange={(event) => setNameDraft(event.target.value)}
+                  disabled={nameSaving}
+                />
+                <button type="button" className="btn btn-primary btn-sm" disabled={nameSaving} onClick={() => void saveName()}>
+                  {nameSaving ? 'Сохраняем...' : 'Сохранить'}
+                </button>
+              </div>
+            </div>
             <div className="route-manage-grid">
               <div>
                 <label className="form-label">Доступ</label>
